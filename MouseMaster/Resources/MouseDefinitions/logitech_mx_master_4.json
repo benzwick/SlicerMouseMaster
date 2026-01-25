@@ -1,0 +1,54 @@
+{
+  "id": "logitech_mx_master_4",
+  "name": "Logitech MX Master 4",
+  "vendor": "Logitech",
+  "vendorId": "0x046D",
+  "productIds": ["0xB034", "0xC556"],
+  "buttons": [
+    {
+      "id": "left",
+      "name": "Left Click",
+      "qtButton": 1,
+      "remappable": false
+    },
+    {
+      "id": "right",
+      "name": "Right Click",
+      "qtButton": 2,
+      "remappable": false
+    },
+    {
+      "id": "middle",
+      "name": "Middle Click",
+      "qtButton": 4,
+      "remappable": true,
+      "defaultAction": "view_reset_3d"
+    },
+    {
+      "id": "back",
+      "name": "Back",
+      "qtButton": 8,
+      "remappable": true,
+      "defaultAction": "edit_undo"
+    },
+    {
+      "id": "forward",
+      "name": "Forward",
+      "qtButton": 16,
+      "remappable": true,
+      "defaultAction": "edit_redo"
+    },
+    {
+      "id": "thumb",
+      "name": "Thumb Button",
+      "qtButton": 32,
+      "remappable": true,
+      "defaultAction": "view_toggle_crosshair"
+    }
+  ],
+  "features": {
+    "horizontalScroll": true,
+    "thumbWheel": true,
+    "gestureButton": true
+  }
+}

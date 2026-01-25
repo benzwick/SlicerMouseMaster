@@ -1,0 +1,29 @@
+{
+  "id": "segmentation_workflow",
+  "name": "Segmentation Workflow",
+  "version": "1.0",
+  "mouseId": "logitech_mx_master_3s",
+  "author": "SlicerMouseMaster",
+  "description": "Optimized for segmentation tasks with quick segment navigation and effect switching",
+  "mappings": {
+    "middle": {
+      "action": "view_center_crosshair"
+    },
+    "back": {
+      "action": "segment_previous"
+    },
+    "forward": {
+      "action": "segment_next"
+    },
+    "thumb": {
+      "action": "segment_editor_paint"
+    }
+  },
+  "contextMappings": {
+    "SegmentEditor": {
+      "middle": {
+        "action": "view_center_crosshair"
+      }
+    }
+  }
+}

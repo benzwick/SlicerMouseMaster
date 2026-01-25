@@ -1,0 +1,35 @@
+{
+  "id": "default_mx_master_4",
+  "name": "MX Master 4 Default",
+  "version": "1.0",
+  "mouseId": "logitech_mx_master_4",
+  "author": "SlicerMouseMaster",
+  "description": "Default bindings for Logitech MX Master 4 with Segment Editor optimizations",
+  "mappings": {
+    "middle": {
+      "action": "view_reset_3d"
+    },
+    "back": {
+      "action": "edit_undo"
+    },
+    "forward": {
+      "action": "edit_redo"
+    },
+    "thumb": {
+      "action": "view_toggle_crosshair"
+    }
+  },
+  "contextMappings": {
+    "SegmentEditor": {
+      "back": {
+        "action": "segment_previous"
+      },
+      "forward": {
+        "action": "segment_next"
+      },
+      "thumb": {
+        "action": "segment_editor_paint"
+      }
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "id": "generic_5_button",
+  "name": "Generic 5-Button Mouse",
+  "vendor": "Generic",
+  "vendorId": "0x0000",
+  "productIds": [],
+  "buttons": [
+    {
+      "id": "left",
+      "name": "Left Click",
+      "qtButton": 1,
+      "remappable": false
+    },
+    {
+      "id": "right",
+      "name": "Right Click",
+      "qtButton": 2,
+      "remappable": false
+    },
+    {
+      "id": "middle",
+      "name": "Middle Click",
+      "qtButton": 4,
+      "remappable": true,
+      "defaultAction": "view_reset_3d"
+    },
+    {
+      "id": "back",
+      "name": "Back",
+      "qtButton": 8,
+      "remappable": true,
+      "defaultAction": "edit_undo"
+    },
+    {
+      "id": "forward",
+      "name": "Forward",
+      "qtButton": 16,
+      "remappable": true,
+      "defaultAction": "edit_redo"
+    }
+  ],
+  "features": {
+    "horizontalScroll": false,
+    "thumbWheel": false,
+    "gestureButton": false
+  }
+}

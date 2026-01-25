@@ -1,0 +1,14 @@
+{
+  "id": "default_generic_3_button",
+  "name": "Generic 3-Button Default",
+  "version": "1.0",
+  "mouseId": "generic_3_button",
+  "author": "SlicerMouseMaster",
+  "description": "Default bindings for generic 3-button mice",
+  "mappings": {
+    "middle": {
+      "action": "view_reset_3d"
+    }
+  },
+  "contextMappings": {}
+}

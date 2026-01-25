@@ -1,0 +1,29 @@
+{
+  "id": "default_generic_5_button",
+  "name": "Generic 5-Button Default",
+  "version": "1.0",
+  "mouseId": "generic_5_button",
+  "author": "SlicerMouseMaster",
+  "description": "Default bindings for generic 5-button mice",
+  "mappings": {
+    "middle": {
+      "action": "view_reset_3d"
+    },
+    "back": {
+      "action": "edit_undo"
+    },
+    "forward": {
+      "action": "edit_redo"
+    }
+  },
+  "contextMappings": {
+    "SegmentEditor": {
+      "back": {
+        "action": "segment_previous"
+      },
+      "forward": {
+        "action": "segment_next"
+      }
+    }
+  }
+}
