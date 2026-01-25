@@ -1,0 +1,139 @@
+[project]
+name = "slicermousemaster"
+version = "0.1.0"
+description = "3D Slicer extension for mouse customization and button remapping"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "BSD-3-Clause" }
+authors = [{ name = "SlicerMouseMaster Contributors" }]
+keywords = ["3d-slicer", "mouse", "customization", "button-mapping"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Healthcare Industry",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+]
+
+# Note: VTK, Qt, and slicer are provided by 3D Slicer runtime
+# These dependencies are for development/testing only
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0",
+    "pre-commit>=3.0",
+]
+# Optional Linux-only dependency for advanced button detection
+linux = [
+    "evdev>=1.6.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/username/SlicerMouseMaster"
+Documentation = "https://github.com/username/SlicerMouseMaster#readme"
+Repository = "https://github.com/username/SlicerMouseMaster.git"
+Issues = "https://github.com/username/SlicerMouseMaster/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["MouseMaster"]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+src = ["MouseMaster"]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "SIM",    # flake8-simplify
+    "TID",    # flake8-tidy-imports
+    "RUF",    # ruff-specific rules
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "B008",   # do not perform function calls in argument defaults
+    "SIM108", # use ternary operator instead of if-else
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["MouseMaster", "MouseMasterLib"]
+
+[tool.ruff.lint.per-file-ignores]
+"Testing/**" = ["F401", "F811"]  # Allow unused imports in tests
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+show_error_codes = true
+
+# Slicer/VTK/Qt stubs not available, ignore missing imports
+[[tool.mypy.overrides]]
+module = [
+    "slicer",
+    "slicer.*",
+    "vtk",
+    "vtk.*",
+    "qt",
+    "ctk",
+    "ctk.*",
+    "SampleData",
+    "evdev",
+    "evdev.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["MouseMaster/Testing/Python"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "slicer: marks tests that require Slicer runtime",
+]
+
+[tool.coverage.run]
+source = ["MouseMaster/MouseMasterLib"]
+omit = [
+    "*/Testing/*",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+]

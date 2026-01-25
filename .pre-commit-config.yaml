@@ -1,0 +1,50 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.9
+    hooks:
+      # Run the linter
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      # Run the formatter
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        additional_dependencies: []
+        args: [--ignore-missing-imports]
+        files: ^MouseMaster/MouseMasterLib/
+        exclude: ^MouseMaster/Testing/
+
+  - repo: local
+    hooks:
+      - id: check-no-print
+        name: Check for print statements
+        entry: python -c "import sys; sys.exit(1 if 'print(' in open(sys.argv[1]).read() else 0)"
+        language: system
+        files: ^MouseMaster/MouseMasterLib/.*\.py$
+        exclude: ^MouseMaster/Testing/
+
+# Configuration
+default_language_version:
+  python: python3.9
+
+ci:
+  autofix_commit_msg: 'style: auto-fix from pre-commit hooks'
+  autoupdate_commit_msg: 'chore: update pre-commit hooks'
+  skip: [mypy]  # mypy is slow, skip in CI pre-commit
