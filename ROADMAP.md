@@ -31,10 +31,10 @@ This document tracks the development milestones for SlicerMouseMaster.
 - [x] Create ADR-001 through ADR-010
 
 ### Project Setup
-- [ ] Create pyproject.toml
-- [ ] Create .pre-commit-config.yaml
-- [ ] Create .env.example
-- [ ] Update .claude/settings.local.json with uv/pytest/ruff permissions
+- [x] Create pyproject.toml
+- [x] Create .pre-commit-config.yaml
+- [x] Create .env.example
+- [x] Create .claude/skills/ for workflow automation
 
 ### Structure
 - [ ] Create MouseMasterLib/ directory structure
