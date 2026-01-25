@@ -72,6 +72,8 @@ ignore = [
     "E501",   # line too long (handled by formatter)
     "B008",   # do not perform function calls in argument defaults
     "SIM108", # use ternary operator instead of if-else
+    "F403",   # star imports (standard Slicer pattern)
+    "F405",   # may be undefined from star imports (standard Slicer pattern)
 ]
 
 [tool.ruff.lint.isort]

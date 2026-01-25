@@ -1,29 +1,17 @@
 import logging
-import os
 from pathlib import Path
-from typing import Annotated
-
-import vtk
-
-import slicer
-from slicer.i18n import tr as _
-from slicer.i18n import translate
-from slicer.ScriptedLoadableModule import *
-from slicer.util import VTKObservationMixin
-from slicer.parameterNodeWrapper import (
-    parameterNodeWrapper,
-    WithinRange,
-)
 
 import ctk
+import slicer
+import vtk
+from slicer.i18n import tr as _
+from slicer.i18n import translate
+from slicer.parameterNodeWrapper import parameterNodeWrapper
+from slicer.ScriptedLoadableModule import *
+from slicer.util import VTKObservationMixin
 
 # MouseMaster library imports
-from MouseMasterLib import (
-    MouseProfile,
-    PresetManager,
-    MouseMasterEventHandler,
-)
-
+from MouseMasterLib import MouseMasterEventHandler, PresetManager
 
 #
 # MouseMaster

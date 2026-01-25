@@ -37,10 +37,10 @@ This document tracks the development milestones for SlicerMouseMaster.
 - [x] Create .claude/skills/ for workflow automation
 
 ### Structure
-- [ ] Create MouseMasterLib/ directory structure
-- [ ] Create placeholder modules with docstrings
-- [ ] Create Resources/MouseDefinitions/ structure
-- [ ] Create presets/builtin/ structure
+- [x] Create MouseMasterLib/ directory structure
+- [x] Create placeholder modules with docstrings
+- [x] Create Resources/MouseDefinitions/ structure
+- [x] Create presets/builtin/ structure
 
 ---
 
