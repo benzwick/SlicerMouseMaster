@@ -1,5 +1,6 @@
 import logging
 import os
+from pathlib import Path
 from typing import Annotated
 
 import vtk
@@ -14,7 +15,14 @@ from slicer.parameterNodeWrapper import (
     WithinRange,
 )
 
-from slicer import vtkMRMLScalarVolumeNode
+import ctk
+
+# MouseMaster library imports
+from MouseMasterLib import (
+    MouseProfile,
+    PresetManager,
+    MouseMasterEventHandler,
+)
 
 
 #
@@ -29,75 +37,26 @@ class MouseMaster(ScriptedLoadableModule):
 
     def __init__(self, parent):
         ScriptedLoadableModule.__init__(self, parent)
-        self.parent.title = _("MouseMaster")  # TODO: make this more human readable by adding spaces
+        self.parent.title = _("Mouse Master")
         # TODO: set categories (folders where the module shows up in the module selector)
-        self.parent.categories = [translate("qSlicerAbstractCoreModule", "Examples")]
+        self.parent.categories = [translate("qSlicerAbstractCoreModule", "Utilities")]
         self.parent.dependencies = []  # TODO: add here list of module names that this module requires
-        self.parent.contributors = ["John Doe (AnyWare Corp.)"]  # TODO: replace with "Firstname Lastname (Organization)"
+        self.parent.contributors = ["SlicerMouseMaster Contributors"]  # TODO: replace with "Firstname Lastname (Organization)"
         # TODO: update with short description of the module and a link to online module documentation
         # _() function marks text as translatable to other languages
         self.parent.helpText = _("""
-This is an example of scripted loadable module bundled in an extension.
-See more information in <a href="https://github.com/organization/projectname#MouseMaster">module documentation</a>.
+Mouse customization extension for 3D Slicer. Provides button remapping,
+workflow presets, and context-sensitive bindings for multi-button mice.
+See more information in <a href="https://github.com/username/SlicerMouseMaster#readme">module documentation</a>.
 """)
         # TODO: replace with organization, grant and thanks
         self.parent.acknowledgementText = _("""
-This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc., Andras Lasso, PerkLab,
-and Steve Pieper, Isomics, Inc. and was partially funded by NIH grant 3P41RR013218-12S1.
+This extension was developed by the SlicerMouseMaster contributors.
+Based on the Slicer extension template.
 """)
 
-        # Additional initialization step after application startup is complete
-        slicer.app.connect("startupCompleted()", registerSampleData)
 
 
-#
-# Register sample data sets in Sample Data module
-#
-
-
-def registerSampleData():
-    """Add data sets to Sample Data module."""
-    # It is always recommended to provide sample data for users to make it easy to try the module,
-    # but if no sample data is available then this method (and associated startupCompeted signal connection) can be removed.
-
-    import SampleData
-
-    iconsPath = os.path.join(os.path.dirname(__file__), "Resources/Icons")
-
-    # To ensure that the source code repository remains small (can be downloaded and installed quickly)
-    # it is recommended to store data sets that are larger than a few MB in a Github release.
-
-    # MouseMaster1
-    SampleData.SampleDataLogic.registerCustomSampleDataSource(
-        # Category and sample name displayed in Sample Data module
-        category="MouseMaster",
-        sampleName="MouseMaster1",
-        # Thumbnail should have size of approximately 260x280 pixels and stored in Resources/Icons folder.
-        # It can be created by Screen Capture module, "Capture all views" option enabled, "Number of images" set to "Single".
-        thumbnailFileName=os.path.join(iconsPath, "MouseMaster1.png"),
-        # Download URL and target file name
-        uris="https://github.com/Slicer/SlicerTestingData/releases/download/SHA256/998cb522173839c78657f4bc0ea907cea09fd04e44601f17c82ea27927937b95",
-        fileNames="MouseMaster1.nrrd",
-        # Checksum to ensure file integrity. Can be computed by this command:
-        #  import hashlib; print(hashlib.sha256(open(filename, "rb").read()).hexdigest())
-        checksums="SHA256:998cb522173839c78657f4bc0ea907cea09fd04e44601f17c82ea27927937b95",
-        # This node name will be used when the data set is loaded
-        nodeNames="MouseMaster1",
-    )
-
-    # MouseMaster2
-    SampleData.SampleDataLogic.registerCustomSampleDataSource(
-        # Category and sample name displayed in Sample Data module
-        category="MouseMaster",
-        sampleName="MouseMaster2",
-        thumbnailFileName=os.path.join(iconsPath, "MouseMaster2.png"),
-        # Download URL and target file name
-        uris="https://github.com/Slicer/SlicerTestingData/releases/download/SHA256/1a64f3f422eb3d1c9b093d1a18da354b13bcf307907c66317e2463ee530b7a97",
-        fileNames="MouseMaster2.nrrd",
-        checksums="SHA256:1a64f3f422eb3d1c9b093d1a18da354b13bcf307907c66317e2463ee530b7a97",
-        # This node name will be used when the data set is loaded
-        nodeNames="MouseMaster2",
-    )
 
 
 #
@@ -110,18 +69,14 @@ class MouseMasterParameterNode:
     """
     The parameters needed by module.
 
-    inputVolume - The volume to threshold.
-    imageThreshold - The value at which to threshold the input volume.
-    invertThreshold - If true, will invert the threshold.
-    thresholdedVolume - The output volume that will contain the thresholded volume.
-    invertedVolume - The output volume that will contain the inverted thresholded volume.
+    enabled - Whether mouse button interception is active.
+    selectedMouseId - ID of the selected mouse profile.
+    selectedPresetId - ID of the selected button mapping preset.
     """
 
-    inputVolume: vtkMRMLScalarVolumeNode
-    imageThreshold: Annotated[float, WithinRange(-100, 500)] = 100
-    invertThreshold: bool = False
-    thresholdedVolume: vtkMRMLScalarVolumeNode
-    invertedVolume: vtkMRMLScalarVolumeNode
+    enabled: bool = False
+    selectedMouseId: str = ""
+    selectedPresetId: str = ""
 
 
 #
@@ -141,25 +96,27 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.logic = None
         self._parameterNode = None
         self._parameterNodeGuiTag = None
+        # MouseMaster specific
+        self._eventHandler = None
+        self._presetManager = None
 
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
         ScriptedLoadableModuleWidget.setup(self)
 
-        # Load widget from .ui file (created by Qt Designer).
-        # Additional widgets can be instantiated manually and added to self.layout.
-        uiWidget = slicer.util.loadUI(self.resourcePath("UI/MouseMaster.ui"))
-        self.layout.addWidget(uiWidget)
-        self.ui = slicer.util.childWidgetVariables(uiWidget)
-
-        # Set scene in MRML widgets. Make sure that in Qt designer the top-level qMRMLWidget's
-        # "mrmlSceneChanged(vtkMRMLScene*)" signal in is connected to each MRML widget's.
-        # "setMRMLScene(vtkMRMLScene*)" slot.
-        uiWidget.setMRMLScene(slicer.mrmlScene)
+        # Create programmatic UI for MouseMaster
+        self._setupUI()
 
         # Create logic class. Logic implements all computations that should be possible to run
         # in batch mode, without a graphical user interface.
         self.logic = MouseMasterLogic()
+
+        # Initialize MouseMaster components
+        self._eventHandler = MouseMasterEventHandler()
+        self._presetManager = PresetManager(
+            builtin_dir=Path(self.resourcePath("MouseDefinitions")),
+            user_dir=Path(slicer.app.slicerUserSettingsFilePath).parent / "MouseMaster" / "presets",
+        )
 
         # Connections
 
@@ -167,15 +124,55 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.addObserver(slicer.mrmlScene, slicer.mrmlScene.StartCloseEvent, self.onSceneStartClose)
         self.addObserver(slicer.mrmlScene, slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
 
-        # Buttons
-        self.ui.applyButton.connect("clicked(bool)", self.onApplyButton)
-
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
+
+    def _setupUI(self) -> None:
+        """Create the MouseMaster user interface programmatically."""
+        import qt
+
+        # Collapsible button for mouse selection
+        mouseCollapsible = ctk.ctkCollapsibleButton()
+        mouseCollapsible.text = "Mouse Selection"
+        self.layout.addWidget(mouseCollapsible)
+        mouseLayout = qt.QFormLayout(mouseCollapsible)
+
+        # Mouse selector combo box
+        self.mouseSelector = qt.QComboBox()
+        self.mouseSelector.addItem("-- Select Mouse --", "")
+        mouseLayout.addRow("Mouse Model:", self.mouseSelector)
+
+        # Collapsible button for preset management
+        presetCollapsible = ctk.ctkCollapsibleButton()
+        presetCollapsible.text = "Preset Management"
+        self.layout.addWidget(presetCollapsible)
+        presetLayout = qt.QFormLayout(presetCollapsible)
+
+        # Preset selector combo box
+        self.presetSelector = qt.QComboBox()
+        self.presetSelector.addItem("-- Select Preset --", "")
+        presetLayout.addRow("Preset:", self.presetSelector)
+
+        # Enable/Disable button
+        self.enableButton = qt.QPushButton("Enable Mouse Master")
+        self.enableButton.checkable = True
+        self.enableButton.checked = False
+        presetLayout.addRow(self.enableButton)
+
+        # Connect signals
+        self.enableButton.connect("toggled(bool)", self.onEnableToggled)
+        self.mouseSelector.connect("currentIndexChanged(int)", self.onMouseSelected)
+        self.presetSelector.connect("currentIndexChanged(int)", self.onPresetSelected)
+
+        # Add stretch to push widgets to top
+        self.layout.addStretch(1)
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
         self.removeObservers()
+        # Uninstall event handler when module is cleaned up
+        if self._eventHandler:
+            self._eventHandler.uninstall()
 
     def enter(self) -> None:
         """Called each time the user opens this module."""
@@ -208,11 +205,8 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         self.setParameterNode(self.logic.getParameterNode())
 
-        # Select default input nodes if nothing is selected yet to save a few clicks for the user
-        if not self._parameterNode.inputVolume:
-            firstVolumeNode = slicer.mrmlScene.GetFirstNodeByClass("vtkMRMLScalarVolumeNode")
-            if firstVolumeNode:
-                self._parameterNode.inputVolume = firstVolumeNode
+        # Populate mouse selector with available profiles
+        self._populateMouseSelector()
 
     def setParameterNode(self, inputParameterNode: MouseMasterParameterNode | None) -> None:
         """
@@ -232,25 +226,70 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self._checkCanApply()
 
     def _checkCanApply(self, caller=None, event=None) -> None:
-        if self._parameterNode and self._parameterNode.inputVolume and self._parameterNode.thresholdedVolume:
-            self.ui.applyButton.toolTip = _("Compute output volume")
-            self.ui.applyButton.enabled = True
+        """Check if MouseMaster can be enabled (mouse and preset selected)."""
+        canEnable = bool(self._parameterNode and
+                        self._parameterNode.selectedMouseId and
+                        self._parameterNode.selectedPresetId)
+        self.enableButton.enabled = canEnable
+        if not canEnable:
+            self.enableButton.toolTip = _("Select a mouse and preset first")
         else:
-            self.ui.applyButton.toolTip = _("Select input and output volume nodes")
-            self.ui.applyButton.enabled = False
+            self.enableButton.toolTip = _("Enable/disable mouse button interception")
 
-    def onApplyButton(self) -> None:
-        """Run processing when user clicks "Apply" button."""
-        with slicer.util.tryWithErrorDisplay(_("Failed to compute results."), waitCursor=True):
-            # Compute output
-            self.logic.process(self.ui.inputSelector.currentNode(), self.ui.outputSelector.currentNode(),
-                               self.ui.imageThresholdSliderWidget.value, self.ui.invertOutputCheckBox.checked)
+    def _populateMouseSelector(self) -> None:
+        """Populate the mouse selector with available profiles."""
+        self.mouseSelector.clear()
+        self.mouseSelector.addItem("-- Select Mouse --", "")
+        # Add built-in mouse profiles
+        profiles = ["generic_3_button", "generic_5_button", "logitech_mx_master_3s", "logitech_mx_master_4"]
+        for profile_id in profiles:
+            self.mouseSelector.addItem(profile_id.replace("_", " ").title(), profile_id)
 
-            # Compute inverted output (if needed)
-            if self.ui.invertedOutputSelector.currentNode():
-                # If additional output volume is selected then result with inverted threshold is written there
-                self.logic.process(self.ui.inputSelector.currentNode(), self.ui.invertedOutputSelector.currentNode(),
-                                   self.ui.imageThresholdSliderWidget.value, not self.ui.invertOutputCheckBox.checked, showResult=False)
+    def onEnableToggled(self, enabled: bool) -> None:
+        """Handle enable/disable toggle."""
+        if enabled:
+            self._eventHandler.install()
+            self.enableButton.text = "Disable Mouse Master"
+            logging.info("MouseMaster enabled")
+        else:
+            self._eventHandler.uninstall()
+            self.enableButton.text = "Enable Mouse Master"
+            logging.info("MouseMaster disabled")
+        if self._parameterNode:
+            self._parameterNode.enabled = enabled
+
+    def onMouseSelected(self, index: int) -> None:
+        """Handle mouse selection change."""
+        mouseId = self.mouseSelector.itemData(index)
+        if self._parameterNode:
+            self._parameterNode.selectedMouseId = mouseId if mouseId else ""
+        self._updatePresetSelector()
+
+    def onPresetSelected(self, index: int) -> None:
+        """Handle preset selection change."""
+        presetId = self.presetSelector.itemData(index)
+        if self._parameterNode:
+            self._parameterNode.selectedPresetId = presetId if presetId else ""
+        self._loadSelectedPreset()
+
+    def _updatePresetSelector(self) -> None:
+        """Update preset selector based on selected mouse."""
+        self.presetSelector.clear()
+        self.presetSelector.addItem("-- Select Preset --", "")
+        mouseId = self._parameterNode.selectedMouseId if self._parameterNode else ""
+        if mouseId:
+            presets = self._presetManager.get_presets_for_mouse(mouseId)
+            for preset in presets:
+                self.presetSelector.addItem(preset.name, preset.id)
+
+    def _loadSelectedPreset(self) -> None:
+        """Load the selected preset into the event handler."""
+        presetId = self._parameterNode.selectedPresetId if self._parameterNode else ""
+        if presetId:
+            preset = self._presetManager.get_preset(presetId)
+            if preset:
+                self._eventHandler.set_preset(preset)
+                logging.info(f"Loaded preset: {preset.name}")
 
 
 #
@@ -275,43 +314,13 @@ class MouseMasterLogic(ScriptedLoadableModuleLogic):
     def getParameterNode(self):
         return MouseMasterParameterNode(super().getParameterNode())
 
-    def process(self,
-                inputVolume: vtkMRMLScalarVolumeNode,
-                outputVolume: vtkMRMLScalarVolumeNode,
-                imageThreshold: float,
-                invert: bool = False,
-                showResult: bool = True) -> None:
+    def getResourcePath(self, filename: str) -> Path:
+        """Get path to a resource file.
+
+        :param filename: Resource filename relative to Resources directory
+        :return: Full path to resource file
         """
-        Run the processing algorithm.
-        Can be used without GUI widget.
-        :param inputVolume: volume to be thresholded
-        :param outputVolume: thresholding result
-        :param imageThreshold: values above/below this threshold will be set to 0
-        :param invert: if True then values above the threshold will be set to 0, otherwise values below are set to 0
-        :param showResult: show output volume in slice viewers
-        """
-
-        if not inputVolume or not outputVolume:
-            raise ValueError("Input or output volume is invalid")
-
-        import time
-
-        startTime = time.time()
-        logging.info("Processing started")
-
-        # Compute the thresholded output volume using the "Threshold Scalar Volume" CLI module
-        cliParams = {
-            "InputVolume": inputVolume.GetID(),
-            "OutputVolume": outputVolume.GetID(),
-            "ThresholdValue": imageThreshold,
-            "ThresholdType": "Above" if invert else "Below",
-        }
-        cliNode = slicer.cli.run(slicer.modules.thresholdscalarvolume, None, cliParams, wait_for_completion=True, update_display=showResult)
-        # We don't need the CLI module node anymore, remove it to not clutter the scene with it
-        slicer.mrmlScene.RemoveNode(cliNode)
-
-        stopTime = time.time()
-        logging.info(f"Processing completed in {stopTime-startTime:.2f} seconds")
+        return Path(__file__).parent / "Resources" / filename
 
 
 #
@@ -349,35 +358,19 @@ class MouseMasterTest(ScriptedLoadableModuleTest):
 
         self.delayDisplay("Starting the test")
 
-        # Get/create input data
+        # Test that module can be loaded
+        self.assertIsNotNone(slicer.modules.mousemaster)
+        self.delayDisplay("Module loaded successfully")
 
-        import SampleData
-
-        registerSampleData()
-        inputVolume = SampleData.downloadSample("MouseMaster1")
-        self.delayDisplay("Loaded test data set")
-
-        inputScalarRange = inputVolume.GetImageData().GetScalarRange()
-        self.assertEqual(inputScalarRange[0], 0)
-        self.assertEqual(inputScalarRange[1], 695)
-
-        outputVolume = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLScalarVolumeNode")
-        threshold = 100
-
-        # Test the module logic
-
+        # Test that logic can be instantiated
         logic = MouseMasterLogic()
+        self.assertIsNotNone(logic)
+        self.delayDisplay("Logic instantiated successfully")
 
-        # Test algorithm with non-inverted threshold
-        logic.process(inputVolume, outputVolume, threshold, True)
-        outputScalarRange = outputVolume.GetImageData().GetScalarRange()
-        self.assertEqual(outputScalarRange[0], inputScalarRange[0])
-        self.assertEqual(outputScalarRange[1], threshold)
-
-        # Test algorithm with inverted threshold
-        logic.process(inputVolume, outputVolume, threshold, False)
-        outputScalarRange = outputVolume.GetImageData().GetScalarRange()
-        self.assertEqual(outputScalarRange[0], inputScalarRange[0])
-        self.assertEqual(outputScalarRange[1], inputScalarRange[1])
+        # Test that event handler can be created
+        handler = MouseMasterEventHandler()
+        self.assertIsNotNone(handler)
+        self.assertFalse(handler.is_installed)
+        self.delayDisplay("Event handler created successfully")
 
         self.delayDisplay("Test passed")
