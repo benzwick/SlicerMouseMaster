@@ -8,7 +8,7 @@ the current preset configuration.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:
     from MouseMasterLib.preset_manager import Preset
@@ -61,7 +61,7 @@ class MouseMasterEventHandler:
             import slicer
 
             # Create the Qt event filter
-            self._qt_handler = _QtEventFilter(self)
+            self._qt_handler = _create_event_filter(self)
             slicer.app.installEventFilter(self._qt_handler)
 
             self._installed = True
@@ -243,48 +243,39 @@ class MouseMasterEventHandler:
         return False
 
 
-class _QtEventFilter:
-    """Qt event filter wrapper.
+def _create_event_filter(handler: MouseMasterEventHandler) -> object:
+    """Create a Qt event filter that wraps the handler.
 
-    This class is instantiated at runtime when Qt is available.
-    It wraps MouseMasterEventHandler for the Qt event filter protocol.
+    This function creates the filter class at runtime to avoid
+    import-time dependency on Qt.
+
+    Args:
+        handler: The MouseMasterEventHandler instance
+
+    Returns:
+        A QObject subclass instance that can be used as an event filter
     """
+    import qt
 
-    def __init__(self, handler: MouseMasterEventHandler) -> None:
-        """Initialize with reference to the main handler.
+    class QtEventFilter(qt.QObject):
+        """Qt event filter that intercepts mouse button presses."""
 
-        Args:
-            handler: The MouseMasterEventHandler instance
-        """
-        import qt
+        def __init__(self, parent: object = None) -> None:
+            super().__init__(parent)
+            self._handler = handler
+            self._mouse_press = qt.QEvent.MouseButtonPress
 
-        # Inherit from QObject at runtime
-        self._qobject = qt.QObject()
-        self._handler = handler
+        def eventFilter(self, obj: object, event: object) -> bool:
+            """Filter events, intercepting mouse button presses."""
+            try:
+                if event.type() == self._mouse_press:
+                    # Only process non-standard buttons (not left/right for normal clicks)
+                    button = int(event.button())
+                    if button > 4 and self._handler.handle_button_press(event):
+                        return True
+                return False
+            except Exception as e:
+                logger.error(f"Event filter error: {e}")
+                return False
 
-        # Store event type constants
-        self._mouse_press = qt.QEvent.MouseButtonPress
-
-    def eventFilter(self, obj: Any, event: Any) -> bool:
-        """Qt event filter method.
-
-        Args:
-            obj: The object receiving the event
-            event: The event
-
-        Returns:
-            True to consume the event, False to pass through
-        """
-        try:
-
-            if event.type() == self._mouse_press:
-                # Only process non-standard buttons (not left/right for normal clicks)
-                button = int(event.button())
-                if button > 4 and self._handler.handle_button_press(event):
-                    return True
-
-            return False
-
-        except Exception as e:
-            logger.error(f"Event filter error: {e}")
-            return False
+    return QtEventFilter()
