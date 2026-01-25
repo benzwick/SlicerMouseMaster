@@ -1,9 +1,4 @@
-"""Event handling for mouse button interception.
-
-This module provides the core event handler that intercepts mouse
-button presses and routes them to appropriate actions based on
-the current preset configuration.
-"""
+"""Event handling for mouse button interception."""
 
 from __future__ import annotations
 
@@ -17,134 +12,63 @@ logger = logging.getLogger(__name__)
 
 
 class MouseMasterEventHandler:
-    """Application-level event handler for mouse button interception.
-
-    This handler is installed as a Qt event filter on the application
-    to intercept mouse button presses before they reach their targets.
-    Based on the current preset, button presses are either:
-    - Remapped to actions and consumed
-    - Passed through to default Slicer handling
-
-    Usage:
-        handler = MouseMasterEventHandler()
-        handler.set_preset(preset)
-        handler.install()
-        # ... later ...
-        handler.uninstall()
-    """
+    """Application-level event handler for mouse button interception."""
 
     def __init__(self) -> None:
-        """Initialize the event handler."""
         self._installed = False
         self._enabled = True
         self._preset: Preset | None = None
         self._qt_handler: object | None = None
-
-        # Lazy imports of Slicer modules
         self._platform_adapter: object | None = None
         self._action_registry: object | None = None
-
-        # Callbacks
         self._on_button_press: Callable[[str, str], None] | None = None
 
-    def install(self) -> bool:
-        """Install the event handler on the Qt application.
-
-        Returns:
-            True if installation succeeded, False otherwise
-        """
+    def install(self) -> None:
+        """Install the event handler on the Qt application."""
         if self._installed:
-            logger.warning("Event handler already installed")
-            return True
+            return
 
-        try:
-            import slicer
+        import slicer
 
-            # Create the Qt event filter
-            self._qt_handler = _create_event_filter(self)
-            slicer.app.installEventFilter(self._qt_handler)
+        self._qt_handler = _create_event_filter(self)
+        slicer.app.installEventFilter(self._qt_handler)
+        self._installed = True
+        logger.info("Event handler installed")
 
-            self._installed = True
-            logger.info("MouseMaster event handler installed")
-            return True
-
-        except Exception as e:
-            logger.error(f"Failed to install event handler: {e}")
-            return False
-
-    def uninstall(self) -> bool:
-        """Remove the event handler from the Qt application.
-
-        Returns:
-            True if removal succeeded, False otherwise
-        """
+    def uninstall(self) -> None:
+        """Remove the event handler from the Qt application."""
         if not self._installed:
-            return True
+            return
 
-        try:
-            import slicer
+        import slicer
 
-            if self._qt_handler:
-                slicer.app.removeEventFilter(self._qt_handler)
-                self._qt_handler = None
+        if self._qt_handler:
+            slicer.app.removeEventFilter(self._qt_handler)
+            self._qt_handler = None
 
-            self._installed = False
-            logger.info("MouseMaster event handler uninstalled")
-            return True
-
-        except Exception as e:
-            logger.error(f"Failed to uninstall event handler: {e}")
-            return False
+        self._installed = False
 
     @property
     def is_installed(self) -> bool:
-        """Check if the handler is installed."""
         return self._installed
 
     @property
     def is_enabled(self) -> bool:
-        """Check if the handler is enabled."""
         return self._enabled
 
     def set_enabled(self, enabled: bool) -> None:
-        """Enable or disable the handler.
-
-        When disabled, events pass through without interception.
-
-        Args:
-            enabled: Whether to enable the handler
-        """
         self._enabled = enabled
-        logger.debug(f"Event handler {'enabled' if enabled else 'disabled'}")
 
     def set_preset(self, preset: Preset | None) -> None:
-        """Set the active preset.
-
-        Args:
-            preset: The preset to use, or None to disable mapping
-        """
         self._preset = preset
         if preset:
-            logger.info(f"Active preset: {preset.name}")
-        else:
-            logger.info("Preset cleared")
+            logger.info(f"Preset loaded: {preset.name}")
 
     def set_on_button_press(self, callback: Callable[[str, str], None] | None) -> None:
-        """Set a callback for button press events.
-
-        The callback receives (button_id, context) for each press.
-        Useful for UI updates and button detection.
-
-        Args:
-            callback: Callback function or None to clear
-        """
         self._on_button_press = callback
 
     def handle_button_press(self, qt_event: object) -> bool:
         """Handle a mouse button press event.
-
-        Args:
-            qt_event: The QMouseEvent
 
         Returns:
             True if the event was consumed, False to pass through
@@ -173,47 +97,33 @@ class MouseMasterEventHandler:
             return False
 
         # Look up mapping
+        logger.info(f"Button: {normalized.button_id}, context: {context}")
         mapping = self._preset.get_mapping(normalized.button_id, context)
         if not mapping:
+            logger.info(f"No mapping found for {normalized.button_id}")
             return False
 
-        # Execute the action
-        return self._execute_mapping(mapping, normalized, context)
+        logger.info(f"Found mapping: {mapping.action}")
+        # Execute the action and consume the event
+        self._execute_mapping(mapping, normalized, context)
+        return True
 
     def _get_current_context(self) -> str:
-        """Get the name of the currently active Slicer module.
+        """Get the name of the currently active Slicer module."""
+        import slicer.util
 
-        Returns:
-            The module name, or "default" if unknown
-        """
-        try:
-            import slicer
-
-            module = slicer.app.moduleManager().currentModule()
-            return module if module else "default"
-        except Exception:
-            return "default"
+        return slicer.util.selectedModule() or "default"
 
     def _execute_mapping(
         self, mapping: object, normalized: object, context: str
-    ) -> bool:
-        """Execute a button mapping.
-
-        Args:
-            mapping: The Mapping object
-            normalized: The normalized event
-            context: The current module context
-
-        Returns:
-            True if action executed successfully
-        """
+    ) -> None:
+        """Execute a button mapping."""
         # Get action registry (lazy load)
         if self._action_registry is None:
             from MouseMasterLib.action_registry import ActionRegistry
 
             self._action_registry = ActionRegistry.get_instance()
 
-        # Build action context
         from MouseMasterLib.action_registry import ActionContext
 
         action_context = ActionContext(
@@ -222,60 +132,53 @@ class MouseMasterEventHandler:
             modifiers=normalized.modifiers,  # type: ignore
         )
 
-        # Handle different action types
         action_type = mapping.action  # type: ignore
+        action_id = getattr(mapping, "action_id", None)  # type: ignore
 
-        if action_type == "slicer_action" or not hasattr(mapping, "action_id"):
-            # Standard registry action
-            action_id = getattr(mapping, "action_id", None) or mapping.action  # type: ignore
-            return self._action_registry.execute(action_id, action_context)  # type: ignore
-
-        elif action_type == "python_command":
-            # Execute Python command
+        if action_type == "python_command":
             command = mapping.parameters.get("command", "")  # type: ignore
             if command:
                 from MouseMasterLib.action_registry import PythonCommandHandler
 
                 handler = PythonCommandHandler(command)
-                return handler.execute(action_context)
+                handler.execute(action_context)
+            return
 
-        logger.warning(f"Unknown action type: {action_type}")
-        return False
+        # Default: treat as slicer action
+        effective_action_id = action_id or action_type
+        self._action_registry.execute(effective_action_id, action_context)  # type: ignore
 
 
 def _create_event_filter(handler: MouseMasterEventHandler) -> object:
-    """Create a Qt event filter that wraps the handler.
-
-    This function creates the filter class at runtime to avoid
-    import-time dependency on Qt.
-
-    Args:
-        handler: The MouseMasterEventHandler instance
-
-    Returns:
-        A QObject subclass instance that can be used as an event filter
-    """
+    """Create a Qt event filter that wraps the handler."""
     import qt
 
     class QtEventFilter(qt.QObject):
-        """Qt event filter that intercepts mouse button presses."""
-
         def __init__(self, parent: object = None) -> None:
             super().__init__(parent)
             self._handler = handler
             self._mouse_press = qt.QEvent.MouseButtonPress
+            self._mouse_release = qt.QEvent.MouseButtonRelease
+            # Track consumed buttons to also consume their release
+            self._consumed_buttons: set[int] = set()
 
         def eventFilter(self, obj: object, event: object) -> bool:
-            """Filter events, intercepting mouse button presses."""
-            try:
-                if event.type() == self._mouse_press:
-                    # Only process non-standard buttons (not left/right for normal clicks)
-                    button = int(event.button())
-                    if button > 4 and self._handler.handle_button_press(event):
+            event_type = event.type()
+            if event_type == self._mouse_press:
+                button = int(event.button())
+                if button > 4:
+                    logger.info(f"Press event: button={button}")
+                    if self._handler.handle_button_press(event):
+                        self._consumed_buttons.add(button)
+                        logger.info(f"Consumed press for button {button}")
                         return True
-                return False
-            except Exception as e:
-                logger.error(f"Event filter error: {e}")
-                return False
+                    logger.info("Press NOT consumed")
+            elif event_type == self._mouse_release:
+                button = int(event.button())
+                if button in self._consumed_buttons:
+                    self._consumed_buttons.discard(button)
+                    logger.info(f"Consumed release for button {button}")
+                    return True
+            return False
 
     return QtEventFilter()

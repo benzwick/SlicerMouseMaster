@@ -33,33 +33,14 @@ class ActionContext:
 
 
 class ActionHandler(ABC):
-    """Base class for action handlers.
-
-    Action handlers implement specific actions that can be triggered
-    by mouse button presses.
-    """
+    """Base class for action handlers."""
 
     @abstractmethod
     def execute(self, context: ActionContext, **kwargs: Any) -> bool:
-        """Execute the action.
-
-        Args:
-            context: The action context
-            **kwargs: Additional parameters for the action
-
-        Returns:
-            True if action executed successfully, False otherwise
-        """
+        """Execute the action."""
 
     def is_available(self, context: ActionContext) -> bool:
-        """Check if the action is currently available.
-
-        Args:
-            context: The action context
-
-        Returns:
-            True if action can be executed, False otherwise
-        """
+        """Check if the action is currently available."""
         return True
 
 
@@ -67,60 +48,39 @@ class SlicerActionHandler(ActionHandler):
     """Handler for built-in Slicer menu actions."""
 
     def __init__(self, action_name: str) -> None:
-        """Initialize with a Slicer action name.
-
-        Args:
-            action_name: The QAction object name in Slicer
-        """
         self._action_name = action_name
 
     def execute(self, context: ActionContext, **kwargs: Any) -> bool:
         """Trigger the Slicer menu action."""
-        try:
-            from slicer.util import mainWindow
+        import qt
+        from slicer.util import mainWindow
 
-            main = mainWindow()
-            if main is None:
-                logger.warning("Main window not available")
-                return False
-
-            import qt
-
-            action = main.findChild(qt.QAction, self._action_name)
-            if action is None:
-                logger.warning(f"Action not found: {self._action_name}")
-                return False
-
-            action.trigger()
-            logger.debug(f"Triggered action: {self._action_name}")
-            return True
-        except Exception as e:
-            logger.error(f"Failed to execute action {self._action_name}: {e}")
+        main = mainWindow()
+        if main is None:
+            logger.warning("Main window not available")
             return False
+
+        action = main.findChild(qt.QAction, self._action_name)
+        if action is None:
+            logger.warning(f"Action not found: {self._action_name}")
+            return False
+
+        action.trigger()
+        return True
 
 
 class PythonCommandHandler(ActionHandler):
     """Handler for arbitrary Python commands."""
 
     def __init__(self, command: str) -> None:
-        """Initialize with a Python command.
-
-        Args:
-            command: Python code to execute
-        """
         self._command = command
 
     def execute(self, context: ActionContext, **kwargs: Any) -> bool:
         """Execute the Python command."""
-        try:
-            import slicer
+        import slicer
 
-            exec(self._command, {"slicer": slicer, "context": context})
-            logger.debug(f"Executed command: {self._command[:50]}...")
-            return True
-        except Exception as e:
-            logger.error(f"Failed to execute command: {e}")
-            return False
+        exec(self._command, {"slicer": slicer, "context": context})
+        return True
 
 
 class CallableHandler(ActionHandler):
@@ -131,22 +91,12 @@ class CallableHandler(ActionHandler):
         func: Callable[[ActionContext], bool],
         available_check: Callable[[ActionContext], bool] | None = None,
     ) -> None:
-        """Initialize with a callable.
-
-        Args:
-            func: Function to call on execute
-            available_check: Optional function to check availability
-        """
         self._func = func
         self._available_check = available_check
 
     def execute(self, context: ActionContext, **kwargs: Any) -> bool:
         """Call the wrapped function."""
-        try:
-            return self._func(context)
-        except Exception as e:
-            logger.error(f"Handler function failed: {e}")
-            return False
+        return self._func(context)
 
     def is_available(self, context: ActionContext) -> bool:
         """Check availability using the provided function."""
@@ -157,15 +107,7 @@ class CallableHandler(ActionHandler):
 
 @dataclass
 class ActionEntry:
-    """Entry in the action registry.
-
-    Attributes:
-        id: Unique action identifier
-        handler: The action handler
-        category: Action category for organization
-        description: Human-readable description
-        icon: Optional icon name
-    """
+    """Entry in the action registry."""
 
     id: str
     handler: ActionHandler
@@ -175,27 +117,17 @@ class ActionEntry:
 
 
 class ActionRegistry:
-    """Singleton registry of available actions.
-
-    The ActionRegistry maintains a catalog of all actions that can be
-    bound to mouse buttons, including built-in Slicer actions and
-    custom extensions.
-    """
+    """Singleton registry of available actions."""
 
     _instance: ActionRegistry | None = None
 
     def __init__(self) -> None:
-        """Initialize the registry."""
         self._actions: dict[str, ActionEntry] = {}
         self._categories: dict[str, list[str]] = {}
 
     @classmethod
     def get_instance(cls) -> ActionRegistry:
-        """Get the singleton instance.
-
-        Returns:
-            The ActionRegistry singleton
-        """
+        """Get the singleton instance."""
         if cls._instance is None:
             cls._instance = ActionRegistry()
             cls._instance._register_builtin_actions()
@@ -214,15 +146,7 @@ class ActionRegistry:
         description: str,
         icon: str | None = None,
     ) -> None:
-        """Register an action.
-
-        Args:
-            action_id: Unique identifier
-            handler: The action handler
-            category: Category for organization
-            description: Human-readable description
-            icon: Optional icon name
-        """
+        """Register an action."""
         entry = ActionEntry(
             id=action_id,
             handler=handler,
@@ -237,17 +161,8 @@ class ActionRegistry:
         if action_id not in self._categories[category]:
             self._categories[category].append(action_id)
 
-        logger.debug(f"Registered action: {action_id} in category {category}")
-
     def unregister(self, action_id: str) -> bool:
-        """Unregister an action.
-
-        Args:
-            action_id: The action ID to remove
-
-        Returns:
-            True if removed, False if not found
-        """
+        """Unregister an action."""
         if action_id not in self._actions:
             return False
 
@@ -260,64 +175,32 @@ class ActionRegistry:
         return True
 
     def get_action(self, action_id: str) -> ActionEntry | None:
-        """Get an action by ID.
-
-        Args:
-            action_id: The action ID
-
-        Returns:
-            The ActionEntry if found, None otherwise
-        """
+        """Get an action by ID."""
         return self._actions.get(action_id)
 
     def execute(self, action_id: str, context: ActionContext, **kwargs: Any) -> bool:
-        """Execute an action.
-
-        Args:
-            action_id: The action to execute
-            context: The action context
-            **kwargs: Additional parameters
-
-        Returns:
-            True if executed successfully, False otherwise
-        """
+        """Execute an action."""
         entry = self.get_action(action_id)
         if entry is None:
             logger.warning(f"Action not found: {action_id}")
             return False
 
         if not entry.handler.is_available(context):
-            logger.debug(f"Action not available: {action_id}")
             return False
 
         return entry.handler.execute(context, **kwargs)
 
     def get_actions_by_category(self, category: str) -> list[ActionEntry]:
-        """Get all actions in a category.
-
-        Args:
-            category: The category name
-
-        Returns:
-            List of actions in the category
-        """
+        """Get all actions in a category."""
         action_ids = self._categories.get(category, [])
         return [self._actions[aid] for aid in action_ids if aid in self._actions]
 
     def get_categories(self) -> list[str]:
-        """Get all category names.
-
-        Returns:
-            List of category names
-        """
+        """Get all category names."""
         return list(self._categories.keys())
 
     def get_all_actions(self) -> list[ActionEntry]:
-        """Get all registered actions.
-
-        Returns:
-            List of all actions
-        """
+        """Get all registered actions."""
         return list(self._actions.values())
 
     def _register_builtin_actions(self) -> None:
@@ -325,14 +208,14 @@ class ActionRegistry:
         # Editing actions
         self.register(
             "edit_undo",
-            SlicerActionHandler("EditUndoAction"),
+            CallableHandler(self._do_undo),
             "editing",
             "Undo the last action",
             "undo",
         )
         self.register(
             "edit_redo",
-            SlicerActionHandler("EditRedoAction"),
+            CallableHandler(self._do_redo),
             "editing",
             "Redo the last undone action",
             "redo",
@@ -397,132 +280,107 @@ class ActionRegistry:
             "arrow-up",
         )
 
-        logger.info("Registered built-in actions")
+    # Built-in action implementations
 
-    # Helper methods for built-in actions
+    @staticmethod
+    def _do_undo(context: ActionContext) -> bool:
+        import slicer
+
+        slicer.mrmlScene.Undo()
+        return True
+
+    @staticmethod
+    def _do_redo(context: ActionContext) -> bool:
+        import slicer
+
+        slicer.mrmlScene.Redo()
+        return True
 
     @staticmethod
     def _reset_3d_view(context: ActionContext) -> bool:
-        """Reset the 3D view."""
-        try:
-            import slicer
+        import slicer
 
-            layout_manager = slicer.app.layoutManager()
-            for i in range(layout_manager.threeDViewCount):
-                view = layout_manager.threeDWidget(i).threeDView()
-                view.resetFocalPoint()
-                view.resetCamera()
-            return True
-        except Exception as e:
-            logger.error(f"Failed to reset 3D view: {e}")
-            return False
+        layout_manager = slicer.app.layoutManager()
+        for i in range(layout_manager.threeDViewCount):
+            view = layout_manager.threeDWidget(i).threeDView()
+            view.resetFocalPoint()
+            view.resetCamera()
+        return True
 
     @staticmethod
     def _center_crosshair(context: ActionContext) -> bool:
-        """Center views on crosshair."""
-        try:
-            import slicer
+        import slicer
 
-            crosshair = slicer.util.getNode("Crosshair")
-            if crosshair:
-                pos = [0.0, 0.0, 0.0]
-                crosshair.GetCursorPositionRAS(pos)
-                slicer.util.setSliceViewerLayers(background=None, foreground=None, label=None)
-                for node in slicer.util.getNodesByClass("vtkMRMLSliceNode"):
-                    node.JumpSliceByCentering(pos[0], pos[1], pos[2])
-            return True
-        except Exception as e:
-            logger.error(f"Failed to center crosshair: {e}")
-            return False
+        crosshair = slicer.util.getNode("Crosshair")
+        if crosshair:
+            pos = [0.0, 0.0, 0.0]
+            crosshair.GetCursorPositionRAS(pos)
+            for node in slicer.util.getNodesByClass("vtkMRMLSliceNode"):
+                node.JumpSliceByCentering(pos[0], pos[1], pos[2])
+        return True
 
     @staticmethod
     def _toggle_crosshair(context: ActionContext) -> bool:
-        """Toggle crosshair visibility."""
-        try:
-            import slicer
+        import slicer
 
-            crosshair = slicer.util.getNode("Crosshair")
-            if crosshair:
-                current = crosshair.GetCrosshairMode()
-                if current == 0:  # NoCrosshair
-                    crosshair.SetCrosshairMode(1)  # ShowBasic
-                else:
-                    crosshair.SetCrosshairMode(0)
-            return True
-        except Exception as e:
-            logger.error(f"Failed to toggle crosshair: {e}")
-            return False
+        crosshair = slicer.util.getNode("Crosshair")
+        if crosshair:
+            current = crosshair.GetCrosshairMode()
+            crosshair.SetCrosshairMode(0 if current else 1)
+        return True
 
     @staticmethod
     def _is_segment_editor_active(context: ActionContext) -> bool:
-        """Check if Segment Editor is active."""
         return context.module_name == "SegmentEditor"
 
     @staticmethod
     def _set_segment_editor_effect(effect_name: str) -> Callable[[ActionContext], bool]:
-        """Create a handler to set Segment Editor effect."""
-
         def handler(context: ActionContext) -> bool:
-            try:
-                import slicer
+            import slicer
 
-                editor_widget = slicer.modules.segmenteditor.widgetRepresentation()
-                if editor_widget is None:
-                    return False
-                editor = editor_widget.self().editor
-                editor.setActiveEffectByName(effect_name)
-                return True
-            except Exception as e:
-                logger.error(f"Failed to set effect {effect_name}: {e}")
+            editor_widget = slicer.modules.segmenteditor.widgetRepresentation()
+            if editor_widget is None:
                 return False
+            editor = editor_widget.self().editor
+            editor.setActiveEffectByName(effect_name)
+            return True
 
         return handler
 
     @staticmethod
     def _next_segment(context: ActionContext) -> bool:
-        """Select next segment."""
-        try:
-            import slicer
+        import slicer
 
-            editor_widget = slicer.modules.segmenteditor.widgetRepresentation()
-            if editor_widget is None:
-                return False
-            # Navigate to next segment in the list
-            editor = editor_widget.self().editor
-            segmentation = editor.segmentationNode()
-            if segmentation:
-                seg = segmentation.GetSegmentation()
-                current_id = editor.currentSegmentID()
-                ids = [seg.GetNthSegmentID(i) for i in range(seg.GetNumberOfSegments())]
-                if current_id in ids:
-                    idx = ids.index(current_id)
-                    next_idx = (idx + 1) % len(ids)
-                    editor.setCurrentSegmentID(ids[next_idx])
-            return True
-        except Exception as e:
-            logger.error(f"Failed to select next segment: {e}")
+        editor_widget = slicer.modules.segmenteditor.widgetRepresentation()
+        if editor_widget is None:
             return False
+        editor = editor_widget.self().editor
+        segmentation = editor.segmentationNode()
+        if segmentation:
+            seg = segmentation.GetSegmentation()
+            current_id = editor.currentSegmentID()
+            ids = [seg.GetNthSegmentID(i) for i in range(seg.GetNumberOfSegments())]
+            if current_id in ids:
+                idx = ids.index(current_id)
+                next_idx = (idx + 1) % len(ids)
+                editor.setCurrentSegmentID(ids[next_idx])
+        return True
 
     @staticmethod
     def _previous_segment(context: ActionContext) -> bool:
-        """Select previous segment."""
-        try:
-            import slicer
+        import slicer
 
-            editor_widget = slicer.modules.segmenteditor.widgetRepresentation()
-            if editor_widget is None:
-                return False
-            editor = editor_widget.self().editor
-            segmentation = editor.segmentationNode()
-            if segmentation:
-                seg = segmentation.GetSegmentation()
-                current_id = editor.currentSegmentID()
-                ids = [seg.GetNthSegmentID(i) for i in range(seg.GetNumberOfSegments())]
-                if current_id in ids:
-                    idx = ids.index(current_id)
-                    prev_idx = (idx - 1) % len(ids)
-                    editor.setCurrentSegmentID(ids[prev_idx])
-            return True
-        except Exception as e:
-            logger.error(f"Failed to select previous segment: {e}")
+        editor_widget = slicer.modules.segmenteditor.widgetRepresentation()
+        if editor_widget is None:
             return False
+        editor = editor_widget.self().editor
+        segmentation = editor.segmentationNode()
+        if segmentation:
+            seg = segmentation.GetSegmentation()
+            current_id = editor.currentSegmentID()
+            ids = [seg.GetNthSegmentID(i) for i in range(seg.GetNumberOfSegments())]
+            if current_id in ids:
+                idx = ids.index(current_id)
+                prev_idx = (idx - 1) % len(ids)
+                editor.setCurrentSegmentID(ids[prev_idx])
+        return True

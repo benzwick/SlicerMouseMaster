@@ -193,8 +193,18 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         self.setParameterNode(self.logic.getParameterNode())
 
-        # Populate mouse selector with available profiles
+        # Block signals while populating and restoring UI to prevent
+        # combo box changes from overwriting saved parameter node values
+        self.mouseSelector.blockSignals(True)
+        self.presetSelector.blockSignals(True)
+        self.enableButton.blockSignals(True)
+
         self._populateMouseSelector()
+        self._restoreUIState()
+
+        self.mouseSelector.blockSignals(False)
+        self.presetSelector.blockSignals(False)
+        self.enableButton.blockSignals(False)
 
     def setParameterNode(self, inputParameterNode: MouseMasterParameterNode | None) -> None:
         """
@@ -229,6 +239,36 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         profiles = ["generic_3_button", "generic_5_button", "logitech_mx_master_3s", "logitech_mx_master_4"]
         for profile_id in profiles:
             self.mouseSelector.addItem(profile_id.replace("_", " ").title(), profile_id)
+
+    def _restoreUIState(self) -> None:
+        """Restore UI state from parameter node."""
+        if not self._parameterNode:
+            return
+
+        # Restore mouse selection
+        mouseId = self._parameterNode.selectedMouseId
+        logging.info(f"[MouseMaster] Restoring UI - mouseId: {mouseId!r}")
+        if mouseId:
+            index = self.mouseSelector.findData(mouseId)
+            logging.info(f"[MouseMaster] Mouse index found: {index}")
+            if index >= 0:
+                self.mouseSelector.setCurrentIndex(index)
+
+        # Restore preset selection (this also loads the preset)
+        self._updatePresetSelector()
+        presetId = self._parameterNode.selectedPresetId
+        logging.info(f"[MouseMaster] Restoring UI - presetId: {presetId!r}")
+        if presetId:
+            index = self.presetSelector.findData(presetId)
+            logging.info(f"[MouseMaster] Preset index found: {index}")
+            if index >= 0:
+                self.presetSelector.setCurrentIndex(index)
+            self._loadSelectedPreset()
+
+        # Restore enabled state
+        logging.info(f"[MouseMaster] Restoring UI - enabled: {self._parameterNode.enabled}")
+        if self._parameterNode.enabled:
+            self.enableButton.setChecked(True)
 
     def onEnableToggled(self, enabled: bool) -> None:
         """Handle enable/disable toggle."""
