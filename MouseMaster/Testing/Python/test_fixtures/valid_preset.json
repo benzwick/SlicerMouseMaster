@@ -1,0 +1,10 @@
+{
+  "id": "test_valid_preset",
+  "name": "Test Valid Preset",
+  "version": "1.0",
+  "mouseId": "test_mouse",
+  "mappings": {
+    "middle": {"action": "view_reset_3d"},
+    "back": {"action": "edit_undo"}
+  }
+}
