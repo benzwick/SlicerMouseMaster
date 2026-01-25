@@ -100,8 +100,11 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         # Initialize MouseMaster components
         self._eventHandler = MouseMasterEventHandler()
+        # Presets are in presets/builtin/ at project root (one level up from MouseMaster/)
+        module_dir = Path(__file__).parent
+        project_dir = module_dir.parent
         self._presetManager = PresetManager(
-            builtin_dir=Path(self.resourcePath("MouseDefinitions")),
+            builtin_dir=project_dir / "presets" / "builtin",
             user_dir=Path(slicer.app.slicerUserSettingsFilePath).parent / "MouseMaster" / "presets",
         )
 
