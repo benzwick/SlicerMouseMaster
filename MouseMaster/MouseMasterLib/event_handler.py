@@ -84,8 +84,9 @@ class MouseMasterEventHandler:
         for view, _ in self._vtk_observers:
             try:
                 view.removeEventFilter(self._qt_handler)
-            except Exception:
-                pass  # View may have been deleted
+            except RuntimeError as e:
+                # View widget may have been deleted by Qt - this is expected during cleanup
+                logger.debug("Could not remove event filter (view likely deleted): %s", e)
         self._vtk_observers.clear()
 
         # Remove from application

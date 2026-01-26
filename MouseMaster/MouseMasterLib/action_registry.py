@@ -305,8 +305,10 @@ class ActionRegistry:
 
             logger.info(f"Discovered {count} Slicer menu actions")
             return count
-        except Exception as e:
-            logger.warning(f"Failed to discover Slicer actions: {e}")
+        except (AttributeError, RuntimeError) as e:
+            # Slicer may not be fully initialized or main window unavailable
+            logger.warning("Failed to discover Slicer actions: %s", e)
+            logger.debug("Action discovery exception details:", exc_info=True)
             return 0
 
     def _register_builtin_actions(self) -> None:
