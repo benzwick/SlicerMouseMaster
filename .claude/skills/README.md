@@ -1,6 +1,6 @@
-# SlicerMouseMaster Claude Skills
+# SlicerMouseMaster Claude Skills & Agents
 
-This directory contains Claude Code skills for automating common tasks in the SlicerMouseMaster extension development and deployment workflow.
+This directory contains Claude Code skills and agents for automating common tasks in the SlicerMouseMaster extension development and deployment workflow.
 
 ## What Are Skills?
 
@@ -12,6 +12,43 @@ Skills are structured instructions that guide Claude through specific tasks. Eac
 - Troubleshooting guidance
 
 Invoke skills by typing `/skill-name` in Claude Code.
+
+---
+
+## Agents
+
+Agents are autonomous workflows that combine multiple skills. Located in `.claude/agents/`.
+
+| Agent | Purpose |
+|-------|---------|
+| `test-runner` | Run tests + lint + audit + report in one workflow |
+
+### Using Agents
+
+Ask Claude to run an agent:
+```
+Run the test-runner agent
+```
+
+Agents can:
+- Run multiple checks autonomously
+- Fix simple issues automatically
+- Generate reports
+- Escalate complex issues to humans
+
+---
+
+## Platform Verification
+
+Track cross-platform testing status in `docs/platform-matrix.md`.
+
+| Platform | Status |
+|----------|--------|
+| Linux | ✓ Primary dev |
+| Windows | ⏳ Pending |
+| macOS | ⏳ Pending |
+
+Update the matrix when verifying on new platforms.
 
 ---
 
