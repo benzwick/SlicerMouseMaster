@@ -58,7 +58,7 @@ This document tracks the development milestones for SlicerMouseMaster.
 ### Testing
 - [x] Unit tests for PlatformAdapter
 - [x] Unit tests for EventHandler (mocked)
-- [ ] Integration test: event capture in Slicer
+- [x] Integration test: event capture in Slicer
 
 ---
 

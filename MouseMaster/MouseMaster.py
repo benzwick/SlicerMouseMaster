@@ -820,20 +820,13 @@ class MouseMasterTest(ScriptedLoadableModuleTest):
         """Run as few or as many tests as needed here."""
         self.setUp()
         self.test_MouseMaster1()
+        self.test_EventHandlerInstall()
+        self.test_PresetLoading()
+        self.test_ActionRegistry()
 
     def test_MouseMaster1(self):
-        """Ideally you should have several levels of tests.  At the lowest level
-        tests should exercise the functionality of the logic with different inputs
-        (both valid and invalid).  At higher levels your tests should emulate the
-        way the user would interact with your code and confirm that it still works
-        the way you intended.
-        One of the most important features of the tests is that it should alert other
-        developers when their changes will have an impact on the behavior of your
-        module.  For example, if a developer removes a feature that you depend on,
-        your test should break so they know that the feature is needed.
-        """
-
-        self.delayDisplay("Starting the test")
+        """Test basic module loading and instantiation."""
+        self.delayDisplay("Starting basic module test")
 
         # Test that module can be loaded
         self.assertIsNotNone(slicer.modules.mousemaster)
@@ -850,4 +843,83 @@ class MouseMasterTest(ScriptedLoadableModuleTest):
         self.assertFalse(handler.is_installed)
         self.delayDisplay("Event handler created successfully")
 
-        self.delayDisplay("Test passed")
+        self.delayDisplay("Basic test passed")
+
+    def test_EventHandlerInstall(self):
+        """Test event handler installation and uninstallation."""
+        self.delayDisplay("Testing event handler install/uninstall")
+
+        handler = MouseMasterEventHandler()
+
+        # Test installation
+        self.assertFalse(handler.is_installed)
+        handler.install()
+        self.assertTrue(handler.is_installed)
+        self.delayDisplay("Event handler installed")
+
+        # Test enable/disable
+        self.assertTrue(handler.is_enabled)
+        handler.set_enabled(False)
+        self.assertFalse(handler.is_enabled)
+        handler.set_enabled(True)
+        self.assertTrue(handler.is_enabled)
+        self.delayDisplay("Enable/disable works")
+
+        # Test uninstallation
+        handler.uninstall()
+        self.assertFalse(handler.is_installed)
+        self.delayDisplay("Event handler uninstalled")
+
+        self.delayDisplay("Event handler test passed")
+
+    def test_PresetLoading(self):
+        """Test preset manager functionality."""
+        self.delayDisplay("Testing preset loading")
+
+        from pathlib import Path
+
+        # Initialize preset manager
+        module_dir = Path(__file__).parent
+        project_dir = module_dir.parent
+        manager = PresetManager(
+            builtin_dir=project_dir / "presets" / "builtin",
+        )
+
+        # Load presets
+        presets = manager.get_all_presets()
+        self.assertGreater(len(presets), 0, "Should have at least one preset")
+        self.delayDisplay(f"Loaded {len(presets)} presets")
+
+        # Test getting a specific preset
+        preset = manager.get_preset("default_generic_5_button")
+        if preset:
+            self.assertEqual(preset.id, "default_generic_5_button")
+            self.assertIsNotNone(preset.mappings)
+            self.delayDisplay("Found default_generic_5_button preset")
+
+        self.delayDisplay("Preset loading test passed")
+
+    def test_ActionRegistry(self):
+        """Test action registry functionality."""
+        self.delayDisplay("Testing action registry")
+
+        from MouseMasterLib.action_registry import ActionRegistry
+
+        registry = ActionRegistry.get_instance()
+
+        # Test categories exist
+        categories = registry.get_categories()
+        self.assertGreater(len(categories), 0, "Should have action categories")
+        self.delayDisplay(f"Found {len(categories)} action categories")
+
+        # Test actions exist
+        actions = registry.get_all_actions()
+        self.assertGreater(len(actions), 0, "Should have registered actions")
+        self.delayDisplay(f"Found {len(actions)} registered actions")
+
+        # Test specific action exists
+        undo_action = registry.get_action("edit_undo")
+        self.assertIsNotNone(undo_action, "edit_undo action should exist")
+        self.delayDisplay("edit_undo action found")
+
+        self.delayDisplay("Action registry test passed")
