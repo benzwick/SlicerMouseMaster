@@ -202,7 +202,7 @@ This document tracks the development milestones for SlicerMouseMaster.
 - [x] Preset validation on import
 
 ### Documentation
-- [ ] Preset contribution guide
+- [x] Preset contribution guide
 - [ ] Community preset repository setup
 - [ ] GitHub Discussions category for presets
 
@@ -213,13 +213,13 @@ This document tracks the development milestones for SlicerMouseMaster.
 **Goal**: Complete documentation, testing, and Extension Index submission.
 
 ### Documentation
-- [ ] Complete user guide with screenshots
+- [x] Complete user guide with screenshots
 - [ ] Video tutorial
-- [ ] FAQ section
+- [x] FAQ section
 
 ### Testing
 - [x] Full unit test coverage (67 tests passing)
-- [ ] All manual tests documented and passing
+- [x] All manual tests documented and passing
 - [ ] Cross-platform verification (Windows, macOS, Linux)
 
 ### Release
