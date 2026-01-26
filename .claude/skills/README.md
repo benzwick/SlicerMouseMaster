@@ -123,6 +123,7 @@ except ImportError:
 | `/detect-buttons` | Development | Discover Qt button codes for unknown mice |
 | `/export-preset` | User | Export and share preset configurations |
 | `/test-bindings` | Development | Debug and verify button bindings |
+| `/run-tests` | Code Quality | Run tests + lint + typecheck + audit |
 | `/audit-code-quality` | Code Quality | Scan for bad practices (fail-fast violations) |
 | `/fix-bad-practices` | Code Quality | Fix exception swallowing and error hiding |
 | `/autonomous-code-review` | Code Quality | Full autonomous code review and fix workflow |
@@ -156,15 +157,21 @@ except ImportError:
 ### For Code Quality Maintenance
 
 ```
-1. /audit-code-quality        # Scan for bad practices
+/run-tests                    # Quick: tests + lint + typecheck + audit
+```
+
+Or for detailed work:
+
+```
+1. /audit-code-quality        # Detailed scan for bad practices
 2. /fix-bad-practices         # Fix identified issues
-3. Run tests                  # Verify fixes don't break code
+3. /run-tests                 # Verify fixes
 ```
 
-Or for fully autonomous review:
+Or fully autonomous:
 
 ```
-1. /autonomous-code-review    # Full audit, fix, and verify cycle
+/autonomous-code-review       # Full audit, fix, and verify cycle
 ```
 
 ---
