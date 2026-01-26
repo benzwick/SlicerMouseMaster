@@ -12,6 +12,9 @@ from slicer.util import VTKObservationMixin
 
 # MouseMaster library imports
 from MouseMasterLib import MouseMasterEventHandler, PresetManager
+from MouseMasterLib.mouse_profile import MouseProfile
+from MouseMasterLib.action_registry import ActionRegistry
+from MouseMasterLib.preset_manager import Mapping
 
 #
 # MouseMaster
@@ -86,6 +89,9 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # MouseMaster specific
         self._eventHandler = None
         self._presetManager = None
+        self._currentProfile: MouseProfile | None = None
+        self._actionRegistry = ActionRegistry.get_instance()
+        self._mouseProfiles: dict[str, MouseProfile] = {}
 
     def setup(self) -> None:
         """Called when the user opens the module the first time and the widget is initialized."""
@@ -107,6 +113,8 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             builtin_dir=project_dir / "presets" / "builtin",
             user_dir=Path(slicer.app.slicerUserSettingsFilePath).parent / "MouseMaster" / "presets",
         )
+        # Load mouse profiles from MouseDefinitions
+        self._loadMouseProfiles()
 
         # Connections
 
@@ -149,10 +157,51 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.enableButton.checked = False
         presetLayout.addRow(self.enableButton)
 
+        # Collapsible button for button mappings
+        mappingsCollapsible = ctk.ctkCollapsibleButton()
+        mappingsCollapsible.text = "Button Mappings"
+        mappingsCollapsible.collapsed = True
+        self.layout.addWidget(mappingsCollapsible)
+        mappingsLayout = qt.QVBoxLayout(mappingsCollapsible)
+
+        # Context-sensitive toggle
+        self.contextToggle = qt.QCheckBox("Enable context-sensitive bindings")
+        self.contextToggle.toolTip = "Use different bindings for different Slicer modules"
+        mappingsLayout.addWidget(self.contextToggle)
+
+        # Context selector (only visible when context toggle is enabled)
+        contextRow = qt.QHBoxLayout()
+        contextLabel = qt.QLabel("Context:")
+        self.contextSelector = qt.QComboBox()
+        self.contextSelector.addItem("Default (all modules)", "")
+        self.contextSelector.addItem("Segment Editor", "SegmentEditor")
+        self.contextSelector.addItem("Markups", "Markups")
+        self.contextSelector.addItem("Volume Rendering", "VolumeRendering")
+        self.contextSelector.enabled = False
+        contextRow.addWidget(contextLabel)
+        contextRow.addWidget(self.contextSelector)
+        contextRow.addStretch()
+        mappingsLayout.addLayout(contextRow)
+
+        # Button mapping table
+        self.mappingTable = qt.QTableWidget()
+        self.mappingTable.setColumnCount(3)
+        self.mappingTable.setHorizontalHeaderLabels(["Button", "Action", ""])
+        self.mappingTable.horizontalHeader().setStretchLastSection(False)
+        self.mappingTable.horizontalHeader().setSectionResizeMode(0, qt.QHeaderView.ResizeToContents)
+        self.mappingTable.horizontalHeader().setSectionResizeMode(1, qt.QHeaderView.Stretch)
+        self.mappingTable.horizontalHeader().setSectionResizeMode(2, qt.QHeaderView.ResizeToContents)
+        self.mappingTable.setSelectionBehavior(qt.QAbstractItemView.SelectRows)
+        self.mappingTable.setEditTriggers(qt.QAbstractItemView.NoEditTriggers)
+        self.mappingTable.setMinimumHeight(150)
+        mappingsLayout.addWidget(self.mappingTable)
+
         # Connect signals
         self.enableButton.connect("toggled(bool)", self.onEnableToggled)
         self.mouseSelector.connect("currentIndexChanged(int)", self.onMouseSelected)
         self.presetSelector.connect("currentIndexChanged(int)", self.onPresetSelected)
+        self.contextToggle.connect("toggled(bool)", self.onContextToggled)
+        self.contextSelector.connect("currentIndexChanged(int)", self.onContextChanged)
 
         # Add stretch to push widgets to top
         self.layout.addStretch(1)
@@ -242,10 +291,9 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         """Populate the mouse selector with available profiles."""
         self.mouseSelector.clear()
         self.mouseSelector.addItem("-- Select Mouse --", "")
-        # Add built-in mouse profiles
-        profiles = ["generic_3_button", "generic_5_button", "logitech_mx_master_3s", "logitech_mx_master_4"]
-        for profile_id in profiles:
-            self.mouseSelector.addItem(profile_id.replace("_", " ").title(), profile_id)
+        # Add loaded mouse profiles
+        for profile_id, profile in self._mouseProfiles.items():
+            self.mouseSelector.addItem(profile.name, profile_id)
 
     def _restoreUIState(self) -> None:
         """Restore UI state from parameter node."""
@@ -295,7 +343,10 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         mouseId = self.mouseSelector.itemData(index)
         if self._parameterNode:
             self._parameterNode.selectedMouseId = mouseId if mouseId else ""
+        # Update current profile
+        self._currentProfile = self._mouseProfiles.get(mouseId) if mouseId else None
         self._updatePresetSelector()
+        self._updateMappingTable()
 
     def onPresetSelected(self, index: int) -> None:
         """Handle preset selection change."""
@@ -322,6 +373,154 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             if preset:
                 self._eventHandler.set_preset(preset)
                 logging.info(f"Loaded preset: {preset.name}")
+                self._updateMappingTable()
+
+    def _loadMouseProfiles(self) -> None:
+        """Load mouse profiles from the MouseDefinitions directory."""
+        module_dir = Path(__file__).parent
+        definitions_dir = module_dir / "Resources" / "MouseDefinitions"
+        if definitions_dir.exists():
+            for json_file in definitions_dir.glob("*.json"):
+                profile = MouseProfile.from_json_file(json_file)
+                self._mouseProfiles[profile.id] = profile
+                logging.info(f"Loaded mouse profile: {profile.name}")
+
+    def onContextToggled(self, enabled: bool) -> None:
+        """Handle context-sensitive toggle."""
+        self.contextSelector.enabled = enabled
+        self._updateMappingTable()
+
+    def onContextChanged(self, index: int) -> None:
+        """Handle context selector change."""
+        self._updateMappingTable()
+
+    def _updateMappingTable(self) -> None:
+        """Update the button mapping table based on current profile and preset."""
+        import qt
+
+        self.mappingTable.setRowCount(0)
+
+        # Get current profile and preset
+        mouseId = self._parameterNode.selectedMouseId if self._parameterNode else ""
+        presetId = self._parameterNode.selectedPresetId if self._parameterNode else ""
+
+        if not mouseId or mouseId not in self._mouseProfiles:
+            return
+
+        profile = self._mouseProfiles[mouseId]
+        preset = self._presetManager.get_preset(presetId) if presetId else None
+
+        # Get current context
+        context = None
+        if self.contextToggle.checked:
+            context = self.contextSelector.currentData
+
+        # Populate table with remappable buttons
+        remappable = profile.get_remappable_buttons()
+        self.mappingTable.setRowCount(len(remappable))
+
+        for row, button in enumerate(remappable):
+            # Button name
+            buttonItem = qt.QTableWidgetItem(button.name)
+            buttonItem.setData(qt.Qt.UserRole, button.id)
+            self.mappingTable.setItem(row, 0, buttonItem)
+
+            # Current action - use combo box for editing
+            actionCombo = qt.QComboBox()
+            self._populateActionCombo(actionCombo)
+
+            # Get current mapping
+            current_action = ""
+            if preset:
+                mapping = preset.get_mapping(button.id, context)
+                if mapping:
+                    current_action = mapping.action_id or mapping.action
+
+            # Set current selection
+            index = actionCombo.findData(current_action)
+            if index >= 0:
+                actionCombo.setCurrentIndex(index)
+
+            # Connect signal with button id
+            actionCombo.setProperty("buttonId", button.id)
+            actionCombo.connect("currentIndexChanged(int)", lambda idx, b=button.id: self._onActionChanged(b, idx))
+            self.mappingTable.setCellWidget(row, 1, actionCombo)
+
+            # Clear button
+            clearBtn = qt.QPushButton("Clear")
+            clearBtn.setMaximumWidth(60)
+            clearBtn.connect("clicked()", lambda checked=False, b=button.id: self._onClearMapping(b))
+            self.mappingTable.setCellWidget(row, 2, clearBtn)
+
+    def _populateActionCombo(self, combo) -> None:
+        """Populate an action combo box with available actions."""
+        combo.clear()
+        combo.addItem("-- None --", "")
+
+        # Add actions grouped by category
+        for category in self._actionRegistry.get_categories():
+            actions = self._actionRegistry.get_actions_by_category(category)
+            for action in actions:
+                combo.addItem(f"{action.description}", action.id)
+
+    def _onActionChanged(self, button_id: str, index: int) -> None:
+        """Handle action selection change for a button."""
+        presetId = self._parameterNode.selectedPresetId if self._parameterNode else ""
+        if not presetId:
+            return
+
+        preset = self._presetManager.get_preset(presetId)
+        if not preset:
+            return
+
+        # Get the combo box that triggered this
+        combo = self.sender()
+        if not combo:
+            return
+
+        action_id = combo.currentData
+        context = None
+        if self.contextToggle.checked:
+            context = self.contextSelector.currentData if self.contextSelector.currentData else None
+
+        if action_id:
+            # Set the mapping
+            mapping = Mapping(action=action_id)
+            preset.set_mapping(button_id, mapping, context)
+            logging.info(f"Set mapping: {button_id} -> {action_id} (context: {context})")
+        else:
+            # Remove the mapping
+            preset.remove_mapping(button_id, context)
+            logging.info(f"Removed mapping: {button_id} (context: {context})")
+
+        # Save the preset
+        self._presetManager.save_preset(preset)
+        # Reload into event handler
+        self._eventHandler.set_preset(preset)
+
+    def _onClearMapping(self, button_id: str) -> None:
+        """Clear the mapping for a button."""
+        presetId = self._parameterNode.selectedPresetId if self._parameterNode else ""
+        if not presetId:
+            return
+
+        preset = self._presetManager.get_preset(presetId)
+        if not preset:
+            return
+
+        context = None
+        if self.contextToggle.checked:
+            context = self.contextSelector.currentData if self.contextSelector.currentData else None
+
+        preset.remove_mapping(button_id, context)
+        logging.info(f"Cleared mapping: {button_id} (context: {context})")
+
+        # Save the preset
+        self._presetManager.save_preset(preset)
+        # Reload into event handler
+        self._eventHandler.set_preset(preset)
+        # Refresh table
+        self._updateMappingTable()
 
     def _saveApplicationSettings(self) -> None:
         """Save current settings to Slicer application settings for persistence."""

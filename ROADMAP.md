@@ -116,9 +116,9 @@ This document tracks the development milestones for SlicerMouseMaster.
 ### UI Components
 - [x] Mouse selector dropdown
 - [x] Preset selector with save/load/export/import
-- [ ] Button mapping table (editable)
-- [ ] Action selector dropdown
-- [ ] Context-sensitive bindings toggle
+- [x] Button mapping table (editable)
+- [x] Action selector dropdown
+- [x] Context-sensitive bindings toggle
 - [x] Status indicator (active/inactive)
 
 ### Resources
@@ -164,8 +164,8 @@ This document tracks the development milestones for SlicerMouseMaster.
 - [x] VolumeRendering context mappings
 
 ### UI
-- [ ] Context-specific binding editor
-- [ ] Per-module override toggle
+- [x] Context-specific binding editor
+- [x] Per-module override toggle
 
 ---
 
