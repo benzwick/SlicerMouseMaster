@@ -334,6 +334,8 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         logging.info(f"[MouseMaster] Restoring UI - enabled: {self._parameterNode.enabled}")
         if self._parameterNode.enabled:
             self.enableButton.setChecked(True)
+            # Must explicitly call handler since signals are blocked during restore
+            self.onEnableToggled(True)
 
     def onEnableToggled(self, enabled: bool) -> None:
         """Handle enable/disable toggle."""
