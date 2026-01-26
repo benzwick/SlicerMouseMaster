@@ -76,7 +76,7 @@ This document tracks the development milestones for SlicerMouseMaster.
 ### Data Model
 - [x] Preset dataclass with validation
 - [x] Mapping dataclass with action references
-- [ ] Version migration support
+- [x] Version migration support
 
 ### Testing
 - [x] Unit tests for serialization/deserialization

@@ -10,9 +10,46 @@ import json
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 logger = logging.getLogger(__name__)
+
+# Current preset format version
+CURRENT_PRESET_VERSION = "1.0"
+
+# Migration functions: version -> function that transforms data dict
+# Each migration takes data dict and returns migrated data dict
+PRESET_MIGRATIONS: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
+    # Example migration from 0.9 to 1.0:
+    # "0.9": lambda data: {**data, "newField": "defaultValue"},
+}
+
+
+def migrate_preset_data(data: dict[str, Any]) -> dict[str, Any]:
+    """Migrate preset data from old versions to current version.
+
+    Args:
+        data: Raw preset data dictionary
+
+    Returns:
+        Migrated data dictionary at current version
+    """
+    version = data.get("version", "1.0")
+
+    # Already at current version
+    if version == CURRENT_PRESET_VERSION:
+        return data
+
+    # Apply migrations in order
+    # This is a simple linear migration; for complex version graphs,
+    # a more sophisticated approach would be needed
+    migrated = data.copy()
+    if version in PRESET_MIGRATIONS:
+        migrated = PRESET_MIGRATIONS[version](migrated)
+        migrated["version"] = CURRENT_PRESET_VERSION
+        logger.info(f"Migrated preset from version {version} to {CURRENT_PRESET_VERSION}")
+
+    return migrated
 
 
 @dataclass
@@ -78,6 +115,9 @@ class Preset:
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Preset:
         """Create a Preset from a dictionary."""
+        # Migrate old versions to current version
+        data = migrate_preset_data(data)
+
         # Parse default mappings
         mappings: dict[str, Mapping] = {}
         for button_id, mapping_data in data.get("mappings", {}).items():
