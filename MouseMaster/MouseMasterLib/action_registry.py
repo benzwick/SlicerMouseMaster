@@ -83,6 +83,55 @@ class PythonCommandHandler(ActionHandler):
         return True
 
 
+class KeyboardShortcutHandler(ActionHandler):
+    """Handler that simulates keyboard shortcuts."""
+
+    def __init__(self, key: str, modifiers: list[str] | None = None) -> None:
+        """Initialize with key and optional modifiers.
+
+        Args:
+            key: The key to simulate (e.g., "A", "F5", "Delete")
+            modifiers: List of modifiers ("ctrl", "shift", "alt", "meta")
+        """
+        self._key = key
+        self._modifiers = modifiers or []
+
+    def execute(self, context: ActionContext, **kwargs: Any) -> bool:
+        """Simulate the keyboard shortcut."""
+        import qt
+        from slicer.util import mainWindow
+
+        main = mainWindow()
+        if main is None:
+            return False
+
+        # Build modifier flags
+        modifier_map = {
+            "ctrl": qt.Qt.ControlModifier,
+            "shift": qt.Qt.ShiftModifier,
+            "alt": qt.Qt.AltModifier,
+            "meta": qt.Qt.MetaModifier,
+        }
+        modifiers = qt.Qt.NoModifier
+        for mod in self._modifiers:
+            if mod.lower() in modifier_map:
+                modifiers = modifiers | modifier_map[mod.lower()]
+
+        # Map key string to Qt key code
+        key_code = getattr(qt.Qt, f"Key_{self._key}", None)
+        if key_code is None:
+            # Try uppercase
+            key_code = getattr(qt.Qt, f"Key_{self._key.upper()}", None)
+        if key_code is None:
+            logger.warning(f"Unknown key: {self._key}")
+            return False
+
+        # Create and post key event
+        event = qt.QKeyEvent(qt.QEvent.KeyPress, key_code, modifiers)
+        qt.QApplication.postEvent(main.focusWidget() or main, event)
+        return True
+
+
 class CallableHandler(ActionHandler):
     """Handler that wraps a callable."""
 

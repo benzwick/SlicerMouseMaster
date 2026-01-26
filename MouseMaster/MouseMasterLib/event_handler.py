@@ -144,6 +144,16 @@ class MouseMasterEventHandler:
                 handler.execute(action_context)
             return
 
+        if action_type == "keyboard_shortcut":
+            key = mapping.parameters.get("key", "")  # type: ignore
+            mods = mapping.parameters.get("modifiers", [])  # type: ignore
+            if key:
+                from MouseMasterLib.action_registry import KeyboardShortcutHandler
+
+                handler = KeyboardShortcutHandler(key, mods)
+                handler.execute(action_context)
+            return
+
         # Default: treat as slicer action
         effective_action_id = action_id or action_type
         self._action_registry.execute(effective_action_id, action_context)  # type: ignore

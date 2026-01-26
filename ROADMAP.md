@@ -188,7 +188,7 @@ This document tracks the development milestones for SlicerMouseMaster.
 ### Custom Actions
 - [x] Python command execution
 - [x] Menu action trigger by name
-- [ ] Keyboard shortcut simulation
+- [x] Keyboard shortcut simulation
 
 ---
 
