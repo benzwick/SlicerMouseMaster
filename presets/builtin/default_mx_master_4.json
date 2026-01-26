@@ -30,6 +30,19 @@
       "thumb": {
         "action": "segment_editor_paint"
       }
+    },
+    "Markups": {
+      "back": {
+        "action": "markups_delete_point"
+      },
+      "thumb": {
+        "action": "markups_place_fiducial"
+      }
+    },
+    "VolumeRendering": {
+      "thumb": {
+        "action": "volumerendering_toggle"
+      }
     }
   }
 }

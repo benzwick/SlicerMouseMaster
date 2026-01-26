@@ -159,6 +159,8 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     def cleanup(self) -> None:
         """Called when the application closes and the module widget is destroyed."""
+        # Save settings to application settings for persistence across sessions
+        self._saveApplicationSettings()
         self.removeObservers()
         # Uninstall event handler when module is cleaned up
         if self._eventHandler:
@@ -192,6 +194,11 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # so that when the scene is saved and reloaded, these settings are restored.
 
         self.setParameterNode(self.logic.getParameterNode())
+
+        # Load settings from application settings if parameter node is empty
+        # (happens on fresh Slicer start without a saved scene)
+        if not self._parameterNode.selectedMouseId:
+            self._loadApplicationSettings()
 
         # Block signals while populating and restoring UI to prevent
         # combo box changes from overwriting saved parameter node values
@@ -315,6 +322,35 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             if preset:
                 self._eventHandler.set_preset(preset)
                 logging.info(f"Loaded preset: {preset.name}")
+
+    def _saveApplicationSettings(self) -> None:
+        """Save current settings to Slicer application settings for persistence."""
+        if not self._parameterNode:
+            return
+        settings = slicer.app.settings()
+        settings.setValue("MouseMaster/selectedMouseId", self._parameterNode.selectedMouseId)
+        settings.setValue("MouseMaster/selectedPresetId", self._parameterNode.selectedPresetId)
+        settings.setValue("MouseMaster/enabled", self._parameterNode.enabled)
+        logging.info("[MouseMaster] Settings saved to application settings")
+
+    def _loadApplicationSettings(self) -> None:
+        """Load settings from Slicer application settings."""
+        if not self._parameterNode:
+            return
+        settings = slicer.app.settings()
+        mouseId = settings.value("MouseMaster/selectedMouseId", "")
+        presetId = settings.value("MouseMaster/selectedPresetId", "")
+        enabled = settings.value("MouseMaster/enabled", False)
+        # QSettings returns strings for bools, need to convert
+        if isinstance(enabled, str):
+            enabled = enabled.lower() == "true"
+        if mouseId:
+            self._parameterNode.selectedMouseId = mouseId
+        if presetId:
+            self._parameterNode.selectedPresetId = presetId
+        if enabled:
+            self._parameterNode.enabled = enabled
+        logging.info(f"[MouseMaster] Loaded settings: mouse={mouseId!r}, preset={presetId!r}, enabled={enabled}")
 
 
 #

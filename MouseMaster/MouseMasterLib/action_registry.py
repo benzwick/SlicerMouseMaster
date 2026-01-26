@@ -280,6 +280,31 @@ class ActionRegistry:
             "arrow-up",
         )
 
+        # Markups actions
+        self.register(
+            "markups_place_fiducial",
+            CallableHandler(self._place_fiducial, self._is_markups_active),
+            "markups",
+            "Start placing fiducial points",
+            "fiducial",
+        )
+        self.register(
+            "markups_delete_point",
+            CallableHandler(self._delete_markup_point, self._is_markups_active),
+            "markups",
+            "Delete selected control point",
+            "delete",
+        )
+
+        # Volume Rendering actions
+        self.register(
+            "volumerendering_toggle",
+            CallableHandler(self._toggle_volume_rendering),
+            "volume_rendering",
+            "Toggle volume rendering visibility",
+            "visibility",
+        )
+
     # Built-in action implementations
 
     @staticmethod
@@ -383,4 +408,46 @@ class ActionRegistry:
                 idx = ids.index(current_id)
                 prev_idx = (idx - 1) % len(ids)
                 editor.setCurrentSegmentID(ids[prev_idx])
+        return True
+
+    @staticmethod
+    def _is_markups_active(context: ActionContext) -> bool:
+        return context.module_name == "Markups"
+
+    @staticmethod
+    def _place_fiducial(context: ActionContext) -> bool:
+        import slicer
+
+        interaction_node = slicer.app.applicationLogic().GetInteractionNode()
+        selection_node = slicer.app.applicationLogic().GetSelectionNode()
+        selection_node.SetReferenceActivePlaceNodeClassName("vtkMRMLMarkupsFiducialNode")
+        interaction_node.SetCurrentInteractionMode(interaction_node.Place)
+        return True
+
+    @staticmethod
+    def _delete_markup_point(context: ActionContext) -> bool:
+        import slicer
+
+        # Get the active markup node
+        selection_node = slicer.app.applicationLogic().GetSelectionNode()
+        markup_id = selection_node.GetActivePlaceNodeID()
+        if not markup_id:
+            return False
+        markup_node = slicer.mrmlScene.GetNodeByID(markup_id)
+        if not markup_node:
+            return False
+        # Delete the last control point
+        n = markup_node.GetNumberOfControlPoints()
+        if n > 0:
+            markup_node.RemoveNthControlPoint(n - 1)
+        return True
+
+    @staticmethod
+    def _toggle_volume_rendering(context: ActionContext) -> bool:
+        import slicer
+
+        # Find volume rendering display nodes
+        vol_rendering_nodes = slicer.util.getNodesByClass("vtkMRMLVolumeRenderingDisplayNode")
+        for node in vol_rendering_nodes:
+            node.SetVisibility(not node.GetVisibility())
         return True

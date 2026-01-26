@@ -128,7 +128,7 @@ This document tracks the development milestones for SlicerMouseMaster.
 ### Integration
 - [x] Connect UI to PresetManager
 - [x] Connect UI to EventHandler enable/disable
-- [ ] Settings persistence on module exit
+- [x] Settings persistence on module exit
 
 ---
 
@@ -160,8 +160,8 @@ This document tracks the development milestones for SlicerMouseMaster.
 
 ### Module-Specific Defaults
 - [x] SegmentEditor context mappings
-- [ ] Markups context mappings
-- [ ] VolumeRendering context mappings
+- [x] Markups context mappings
+- [x] VolumeRendering context mappings
 
 ### UI
 - [ ] Context-specific binding editor

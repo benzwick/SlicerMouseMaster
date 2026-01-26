@@ -24,6 +24,19 @@
       "forward": {
         "action": "segment_next"
       }
+    },
+    "Markups": {
+      "back": {
+        "action": "markups_delete_point"
+      },
+      "forward": {
+        "action": "markups_place_fiducial"
+      }
+    },
+    "VolumeRendering": {
+      "back": {
+        "action": "volumerendering_toggle"
+      }
     }
   }
 }
