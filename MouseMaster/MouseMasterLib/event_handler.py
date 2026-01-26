@@ -22,31 +22,79 @@ class MouseMasterEventHandler:
         self._platform_adapter: object | None = None
         self._action_registry: object | None = None
         self._on_button_press: Callable[[str, str], None] | None = None
+        self._vtk_observers: list[tuple[object, int]] = []
 
     def install(self) -> None:
-        """Install the event handler on the Qt application."""
+        """Install the event handler on the Qt application and VTK views."""
         if self._installed:
             return
 
         import slicer
 
+        # Install Qt application event filter
         self._qt_handler = _create_event_filter(self)
         slicer.app.installEventFilter(self._qt_handler)
+
+        # Install VTK observers on slice views and 3D views
+        self._install_vtk_observers()
+
         self._installed = True
         logger.info("Event handler installed")
 
+    def _install_vtk_observers(self) -> None:
+        """Install Qt event filters on all view widgets."""
+        import slicer
+
+        layoutManager = slicer.app.layoutManager()
+        if not layoutManager:
+            logger.warning("No layout manager available")
+            return
+
+        # Get slice view names and install event filters on their widgets
+        for sliceViewName in layoutManager.sliceViewNames():
+            sliceWidget = layoutManager.sliceWidget(sliceViewName)
+            if sliceWidget:
+                # Install on the slice view (the VTK widget)
+                view = sliceWidget.sliceView()
+                if view:
+                    view.installEventFilter(self._qt_handler)
+                    self._vtk_observers.append((view, "filter"))
+                    logger.debug(f"Installed filter on slice view: {sliceViewName}")
+
+        # Get 3D views and install event filters
+        for i in range(layoutManager.threeDViewCount):
+            threeDWidget = layoutManager.threeDWidget(i)
+            if threeDWidget:
+                view = threeDWidget.threeDView()
+                if view:
+                    view.installEventFilter(self._qt_handler)
+                    self._vtk_observers.append((view, "filter"))
+                    logger.debug(f"Installed filter on 3D view: {i}")
+
+        logger.info(f"Installed event filters on {len(self._vtk_observers)} view widgets")
+
     def uninstall(self) -> None:
-        """Remove the event handler from the Qt application."""
+        """Remove the event handler from the Qt application and views."""
         if not self._installed:
             return
 
         import slicer
 
+        # Remove event filters from view widgets
+        for view, _ in self._vtk_observers:
+            try:
+                view.removeEventFilter(self._qt_handler)
+            except Exception:
+                pass  # View may have been deleted
+        self._vtk_observers.clear()
+
+        # Remove from application
         if self._qt_handler:
             slicer.app.removeEventFilter(self._qt_handler)
             self._qt_handler = None
 
         self._installed = False
+        logger.info("Event handler uninstalled")
 
     @property
     def is_installed(self) -> bool:
