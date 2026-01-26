@@ -27,6 +27,9 @@ class MouseMaster(ScriptedLoadableModule):
     https://github.com/Slicer/Slicer/blob/main/Base/Python/slicer/ScriptedLoadableModule.py
     """
 
+    # Class-level event handler shared across module instances
+    _sharedEventHandler: MouseMasterEventHandler | None = None
+
     def __init__(self, parent):
         ScriptedLoadableModule.__init__(self, parent)
         self.parent.title = _("Mouse Master")
@@ -46,6 +49,55 @@ See more information in <a href="https://github.com/username/SlicerMouseMaster#r
 This extension was developed by the SlicerMouseMaster contributors.
 Based on the Slicer extension template.
 """)
+        # Schedule startup initialization after Slicer is fully loaded
+        import qt
+        qt.QTimer.singleShot(0, self._onStartupComplete)
+
+    def _onStartupComplete(self) -> None:
+        """Called after Slicer startup to initialize event handler if enabled."""
+        import qt
+        # Wait a bit more for layout to be ready
+        qt.QTimer.singleShot(1000, self._initializeEventHandler)
+
+    def _initializeEventHandler(self) -> None:
+        """Initialize event handler at startup if previously enabled."""
+        # Load settings to check if MouseMaster was enabled
+        settings = slicer.app.settings()
+        enabled = settings.value("MouseMaster/enabled", False)
+        # QSettings may return string or bool depending on backend
+        if isinstance(enabled, str):
+            enabled = enabled.lower() == "true"
+        mouseId = settings.value("MouseMaster/selectedMouseId", "")
+        presetId = settings.value("MouseMaster/selectedPresetId", "")
+
+        if not enabled or not mouseId or not presetId:
+            logging.debug("[MouseMaster] Startup: not enabled or no mouse/preset selected")
+            return
+
+        logging.info(f"[MouseMaster] Startup: auto-enabling with mouse={mouseId}, preset={presetId}")
+
+        # Create shared event handler if needed
+        if MouseMaster._sharedEventHandler is None:
+            MouseMaster._sharedEventHandler = MouseMasterEventHandler()
+
+        # Load and set the preset
+        builtin_presets_dir = Path(__file__).parent / "presets" / "builtin"
+        if not builtin_presets_dir.exists():
+            builtin_presets_dir = Path(__file__).parent.parent / "presets" / "builtin"
+
+        user_presets_dir = Path(slicer.app.settings().fileName()).parent / "MouseMaster" / "presets"
+
+        presetManager = PresetManager(
+            builtin_dir=builtin_presets_dir,
+            user_dir=user_presets_dir,
+        )
+        presetManager.load_all()
+
+        preset = presetManager.get_preset(presetId)
+        if preset:
+            MouseMaster._sharedEventHandler.set_preset(preset)
+            MouseMaster._sharedEventHandler.install()
+            logging.info(f"[MouseMaster] Startup: event handler installed with preset '{preset.name}'")
 
 
 
@@ -105,8 +157,12 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # in batch mode, without a graphical user interface.
         self.logic = MouseMasterLogic()
 
-        # Initialize MouseMaster components
-        self._eventHandler = MouseMasterEventHandler()
+        # Initialize MouseMaster components - use shared handler if available
+        if MouseMaster._sharedEventHandler is not None:
+            self._eventHandler = MouseMaster._sharedEventHandler
+        else:
+            self._eventHandler = MouseMasterEventHandler()
+            MouseMaster._sharedEventHandler = self._eventHandler
         # Presets are in presets/builtin/ at project root (one level up from MouseMaster/)
         module_dir = Path(__file__).parent
         project_dir = module_dir.parent
@@ -221,9 +277,9 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # Save settings to application settings for persistence across sessions
         self._saveApplicationSettings()
         self.removeObservers()
-        # Uninstall event handler when module is cleaned up
-        if self._eventHandler:
-            self._eventHandler.uninstall()
+        # Note: Don't uninstall the shared event handler here - it should persist
+        # across module changes. It will be uninstalled when the user disables it
+        # or when Slicer exits.
 
     def enter(self) -> None:
         """Called each time the user opens this module."""
