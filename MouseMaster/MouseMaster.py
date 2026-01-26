@@ -202,7 +202,7 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.mappingTable.horizontalHeader().setSectionResizeMode(2, qt.QHeaderView.ResizeToContents)
         self.mappingTable.setSelectionBehavior(qt.QAbstractItemView.SelectRows)
         self.mappingTable.setEditTriggers(qt.QAbstractItemView.NoEditTriggers)
-        self.mappingTable.setMinimumHeight(150)
+        self.mappingTable.setMinimumHeight(250)
         mappingsLayout.addWidget(self.mappingTable)
 
         # Connect signals
@@ -561,8 +561,8 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 logging.info(f"Added new mouse profile: {profile.name}")
 
     def _saveDetectedProfile(self, profile: MouseProfile) -> None:
-        """Save a detected mouse profile to the user definitions directory."""
-        import json
+        """Save a detected mouse profile and create a default preset."""
+        from MouseMasterLib.preset_manager import Preset
 
         user_dir = Path(slicer.app.slicerUserSettingsFilePath).parent / "MouseMaster" / "MouseDefinitions"
         user_dir.mkdir(parents=True, exist_ok=True)
@@ -571,6 +571,30 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # Add to loaded profiles
         self._mouseProfiles[profile.id] = profile
         logging.info(f"Saved mouse profile to {profile_path}")
+
+        # Create a default preset for the new mouse
+        default_mappings = {}
+        for button in profile.get_remappable_buttons():
+            if button.default_action:
+                default_mappings[button.id] = Mapping(action=button.default_action)
+            elif button.id == "back":
+                default_mappings[button.id] = Mapping(action="edit_undo")
+            elif button.id == "forward":
+                default_mappings[button.id] = Mapping(action="edit_redo")
+            elif button.id == "middle":
+                default_mappings[button.id] = Mapping(action="view_reset_3d")
+
+        preset = Preset(
+            id=f"default_{profile.id}",
+            name=f"{profile.name} Default",
+            version="1.0",
+            mouse_id=profile.id,
+            mappings=default_mappings,
+            author="MouseMaster",
+            description=f"Default preset for {profile.name}",
+        )
+        self._presetManager.save_preset(preset)
+        logging.info(f"Created default preset for {profile.name}")
 
     def _saveApplicationSettings(self) -> None:
         """Save current settings to Slicer application settings for persistence."""
