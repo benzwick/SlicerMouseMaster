@@ -415,15 +415,31 @@ class ActionRegistry:
 
     @staticmethod
     def _do_undo(context: ActionContext) -> bool:
+        """Undo - context aware for SegmentEditor."""
         import slicer
 
+        # For SegmentEditor, use the segment editor's undo
+        if context.module_name == "SegmentEditor":
+            editorWidget = slicer.modules.segmenteditor.widgetRepresentation().self()
+            if hasattr(editorWidget, "editor") and editorWidget.editor:
+                editorWidget.editor.undo()
+                return True
+        # For other modules, use scene undo (or simulate Ctrl+Z)
         slicer.mrmlScene.Undo()
         return True
 
     @staticmethod
     def _do_redo(context: ActionContext) -> bool:
+        """Redo - context aware for SegmentEditor."""
         import slicer
 
+        # For SegmentEditor, use the segment editor's redo
+        if context.module_name == "SegmentEditor":
+            editorWidget = slicer.modules.segmenteditor.widgetRepresentation().self()
+            if hasattr(editorWidget, "editor") and editorWidget.editor:
+                editorWidget.editor.redo()
+                return True
+        # For other modules, use scene redo
         slicer.mrmlScene.Redo()
         return True
 
