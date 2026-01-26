@@ -177,7 +177,7 @@ This document tracks the development milestones for SlicerMouseMaster.
 - [x] ActionRegistry: Singleton action registry
 - [x] ActionRegistry: Built-in action registration
 - [x] ActionRegistry: Custom action registration
-- [ ] ActionRegistry: Action discovery from Slicer
+- [x] ActionRegistry: Action discovery from Slicer
 
 ### Built-in Actions
 - [x] Navigation actions (reset 3D view)

@@ -252,6 +252,63 @@ class ActionRegistry:
         """Get all registered actions."""
         return list(self._actions.values())
 
+    def discover_slicer_actions(self) -> int:
+        """Discover and register available QActions from Slicer's main window.
+
+        Returns:
+            Number of actions discovered and registered
+        """
+        try:
+            import qt
+            from slicer.util import mainWindow
+
+            main = mainWindow()
+            if main is None:
+                logger.warning("Main window not available for action discovery")
+                return 0
+
+            count = 0
+            # Find all QActions in the main window
+            for action in main.findChildren(qt.QAction):
+                name = action.objectName()
+                text = action.text.replace("&", "")  # Remove accelerator markers
+
+                # Skip empty or system actions
+                if not name or not text:
+                    continue
+                # Skip separators
+                if action.isSeparator():
+                    continue
+
+                action_id = f"slicer_menu_{name}"
+
+                # Skip if already registered
+                if action_id in self._actions:
+                    continue
+
+                # Determine category from menu path
+                category = "slicer_menus"
+                parent = action.parent()
+                if parent and hasattr(parent, "title"):
+                    menu_title = parent.title().replace("&", "")
+                    if menu_title:
+                        category = f"menu_{menu_title.lower().replace(' ', '_')}"
+
+                self.register(
+                    action_id,
+                    SlicerActionHandler(name),
+                    category,
+                    text,
+                    None,
+                )
+                count += 1
+
+            logger.info(f"Discovered {count} Slicer menu actions")
+            return count
+        except Exception as e:
+            logger.warning(f"Failed to discover Slicer actions: {e}")
+            return 0
+
     def _register_builtin_actions(self) -> None:
         """Register built-in Slicer actions."""
         # Editing actions

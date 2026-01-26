@@ -117,6 +117,9 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # Load mouse profiles from MouseDefinitions
         self._loadMouseProfiles()
 
+        # Discover Slicer menu actions
+        self._actionRegistry.discover_slicer_actions()
+
         # Connections
 
         # These connections ensure that we update parameter node when scene is closed
