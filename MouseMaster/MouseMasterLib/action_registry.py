@@ -385,6 +385,13 @@ class ActionRegistry:
             "Select previous segment",
             "arrow-up",
         )
+        self.register(
+            "segment_add",
+            CallableHandler(self._add_segment, self._is_segment_editor_active),
+            "segment_editor",
+            "Add new segment",
+            "add",
+        )
 
         # Markups actions
         self.register(
@@ -530,6 +537,24 @@ class ActionRegistry:
                 idx = ids.index(current_id)
                 prev_idx = (idx - 1) % len(ids)
                 editor.setCurrentSegmentID(ids[prev_idx])
+        return True
+
+    @staticmethod
+    def _add_segment(context: ActionContext) -> bool:
+        """Add a new segment in segment editor."""
+        import slicer
+
+        editor_widget = slicer.modules.segmenteditor.widgetRepresentation()
+        if editor_widget is None:
+            return False
+        editor = editor_widget.self().editor
+        segmentation = editor.segmentationNode()
+        if segmentation:
+            seg = segmentation.GetSegmentation()
+            # Add new segment with auto-generated name and color
+            new_segment_id = seg.AddEmptySegment()
+            # Select the new segment
+            editor.setCurrentSegmentID(new_segment_id)
         return True
 
     @staticmethod
