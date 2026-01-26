@@ -15,6 +15,69 @@ Invoke skills by typing `/skill-name` in Claude Code.
 
 ---
 
+## Code Quality Philosophy
+
+This project follows **fail-fast, test-driven development** designed for human-LLM collaboration:
+
+### Principles
+
+1. **Fail Fast** - Errors surface immediately, never hidden
+2. **Explicit Over Silent** - No `except: pass`, no silent `continue`
+3. **Log Everything** - All exceptions logged for debugging
+4. **Test First** - Tests catch bugs, not error suppression
+5. **Clear Signals** - Detailed logs enable autonomous debugging
+
+### Why This Matters for LLM Collaboration
+
+When Claude Code works on this codebase:
+
+- **Clear test output** - Claude can run tests and understand results
+- **Explicit errors** - Claude can identify and fix real issues
+- **Detailed logs** - Claude can trace problems through execution
+- **No hidden state** - Code behavior matches what Claude reads
+- **Autonomous maintenance** - Claude can audit, fix, and verify without hand-holding
+
+### Anti-Patterns (Never Use)
+
+```python
+# NEVER: Silent exception swallowing
+except: pass
+except Exception: pass
+
+# NEVER: Silent continuation
+if error: continue
+
+# NEVER: Hidden None returns
+if bad: return None
+
+# NEVER: Unlogged exceptions
+except SomeError:
+    return default  # No logging!
+```
+
+### Correct Patterns
+
+```python
+# CORRECT: Specific exception + logging + action
+except SpecificError as e:
+    logger.exception("Failed to X: %s", e)
+    raise  # or handle specifically
+
+# CORRECT: Explicit error collection
+if not valid:
+    errors.append(f"Invalid: {item}")
+if errors:
+    raise ValueError(f"Validation failed: {errors}")
+
+# CORRECT: Documented intentional handling
+try:
+    optional_feature()
+except ImportError:
+    logger.info("Optional feature unavailable")  # Intentional, documented
+```
+
+---
+
 ## Skills Overview
 
 | Skill | Category | Purpose |
@@ -23,6 +86,9 @@ Invoke skills by typing `/skill-name` in Claude Code.
 | `/detect-buttons` | Development | Discover Qt button codes for unknown mice |
 | `/export-preset` | User | Export and share preset configurations |
 | `/test-bindings` | Development | Debug and verify button bindings |
+| `/audit-code-quality` | Code Quality | Scan for bad practices (fail-fast violations) |
+| `/fix-bad-practices` | Code Quality | Fix exception swallowing and error hiding |
+| `/autonomous-code-review` | Code Quality | Full autonomous code review and fix workflow |
 | `/extension-submission-checklist` | Submission | Review official Slicer requirements |
 | `/prepare-extension-metadata` | Submission | Generate CMakeLists.txt and JSON metadata |
 | `/validate-extension-submission` | Submission | Automated validation before submission |
@@ -48,6 +114,20 @@ Invoke skills by typing `/skill-name` in Claude Code.
 2. /prepare-extension-metadata        # Update CMakeLists.txt, generate JSON
 3. /validate-extension-submission     # Run automated checks
 4. /submit-to-extension-index         # Complete submission process
+```
+
+### For Code Quality Maintenance
+
+```
+1. /audit-code-quality        # Scan for bad practices
+2. /fix-bad-practices         # Fix identified issues
+3. Run tests                  # Verify fixes don't break code
+```
+
+Or for fully autonomous review:
+
+```
+1. /autonomous-code-review    # Full audit, fix, and verify cycle
 ```
 
 ---
@@ -141,6 +221,135 @@ Invoke skills by typing `/skill-name` in Claude Code.
 - Requires preset to exist in user directory
 - Cannot validate that preset works on other mice
 - No automatic upload to community repository
+
+---
+
+### Code Quality Skills
+
+These skills enforce **fail-fast, test-driven development** principles. The codebase philosophy:
+
+- **Errors should surface immediately** - Never hide or swallow errors
+- **Exceptions are for exceptional cases** - Not for flow control
+- **All exceptions must be logged** - For human and LLM debugging
+- **Tests catch bugs early** - Not error suppression in production
+- **Humans and LLMs collaborate** - Clear logs enable autonomous fixing
+
+#### `/audit-code-quality`
+
+**Purpose**: Systematically scan codebase for bad coding practices.
+
+**When to Use**:
+- Before committing changes
+- During code review
+- Periodically for maintenance
+- Autonomously as part of CI
+
+**Detects**:
+- `except: pass` and `except Exception: pass` (CRITICAL)
+- Overly broad exception handling (HIGH)
+- Silent `if error: continue` patterns (MEDIUM)
+- Missing exception logging (MEDIUM)
+- `return None` hiding errors (LOW)
+- Ignored subprocess return values (MEDIUM)
+
+**Output**:
+- Categorized list of issues by severity
+- File locations and line numbers
+- Code context for each issue
+
+**Limitations**:
+- Pattern-based detection may have false positives
+- Cannot determine developer intent
+- Some patterns require manual review
+- Does not auto-fix issues
+
+---
+
+#### `/fix-bad-practices`
+
+**Purpose**: Fix bad coding practices following fail-fast principles.
+
+**When to Use**:
+- After running `/audit-code-quality`
+- When fixing specific anti-patterns
+- During code quality refactoring
+
+**Fix Patterns**:
+
+| Bad Pattern | Fix |
+|-------------|-----|
+| `except: pass` | Specific exception + logging + re-raise |
+| `except Exception` | Specific exception types |
+| Silent `continue` | Explicit error handling or logging |
+| `return None` on error | Raise exception with context |
+| Error return codes | Raise exceptions instead |
+| subprocess without check | Add `check=True` |
+
+**Output**:
+- Transformed code following best practices
+- Added logging where missing
+- Proper exception handling
+
+**Limitations**:
+- Requires understanding context before applying fix
+- Some fixes may need manual adjustment
+- Must run tests after each fix
+- Cannot fix complex conditional logic automatically
+
+**Caveats**:
+- Always run tests after fixing
+- Review fixes before committing
+- Some "bad" patterns may be intentional (document why)
+
+---
+
+#### `/autonomous-code-review`
+
+**Purpose**: Run complete code quality workflow without human intervention.
+
+**When to Use**:
+- For regular maintenance
+- When instructed to "review and fix code"
+- After completing a feature
+- As scheduled quality check
+
+**Workflow**:
+1. **Assess** - Run tests, linting, type checking
+2. **Audit** - Scan for all bad practices
+3. **Prioritize** - Sort issues by severity
+4. **Fix** - Apply fixes one at a time
+5. **Verify** - Run tests after each fix
+6. **Report** - Generate summary of changes
+
+**Output**:
+- Fixed code with proper error handling
+- Test verification for each fix
+- Summary report of all changes
+- List of issues requiring human review
+
+**Autonomous Capabilities**:
+- Run tests without prompting
+- Identify and categorize issues
+- Apply standard fix patterns
+- Verify fixes don't break tests
+- Generate clear reports
+
+**Limitations**:
+- Cannot fix issues that cause test failures without investigation
+- Cannot determine business logic intent
+- May flag intentional patterns as issues
+- Cannot access Slicer runtime for integration tests
+
+**When Human Review Needed**:
+- Complex exception handling with multiple branches
+- Critical paths (data persistence, security)
+- Patterns marked with explanatory comments
+- Any fix that causes test failures
+
+**Decision Rules**:
+- Auto-fix: Simple patterns (`except:pass`, missing `check=True`)
+- Flag for review: Complex logic, critical paths
+- Skip: Test files, vendored code, commented explanations
 
 ---
 
@@ -287,6 +496,18 @@ Things that currently require manual action:
 - Writing documentation
 - Responding to PR reviews
 - Cross-platform testing
+
+### Code Quality Skill Limitations
+
+The code quality skills have specific limitations:
+
+| Limitation | Reason | Workaround |
+|------------|--------|------------|
+| False positives | Pattern-based detection | Manual review flagged items |
+| Cannot determine intent | No semantic understanding | Add comments explaining patterns |
+| Test files flagged | May test error conditions | Exclude test directories |
+| Complex logic | Cannot reason about flow | Human review required |
+| Runtime behavior | Static analysis only | Slicer integration tests needed |
 
 ---
 
