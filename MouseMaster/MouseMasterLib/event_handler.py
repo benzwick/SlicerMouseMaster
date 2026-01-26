@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 if TYPE_CHECKING:
     from MouseMasterLib.preset_manager import Preset
@@ -22,7 +22,7 @@ class MouseMasterEventHandler:
         self._platform_adapter: object | None = None
         self._action_registry: object | None = None
         self._on_button_press: Callable[[str, str], None] | None = None
-        self._vtk_observers: list[tuple[object, int]] = []
+        self._vtk_observers: list[tuple[Any, str]] = []
 
     def install(self) -> None:
         """Install the event handler on the Qt application and VTK views."""
@@ -182,25 +182,25 @@ class MouseMasterEventHandler:
         )
 
         action_type = mapping.action  # type: ignore
-        action_id = getattr(mapping, "action_id", None)  # type: ignore
+        action_id = getattr(mapping, "action_id", None)
 
         if action_type == "python_command":
-            command = mapping.parameters.get("command", "")  # type: ignore
+            command = mapping.parameters.get("command", "")  # type: ignore[attr-defined]
             if command:
                 from MouseMasterLib.action_registry import PythonCommandHandler
 
-                handler = PythonCommandHandler(command)
-                handler.execute(action_context)
+                cmd_handler = PythonCommandHandler(command)
+                cmd_handler.execute(action_context)
             return
 
         if action_type == "keyboard_shortcut":
-            key = mapping.parameters.get("key", "")  # type: ignore
-            mods = mapping.parameters.get("modifiers", [])  # type: ignore
+            key = mapping.parameters.get("key", "")  # type: ignore[attr-defined]
+            mods = mapping.parameters.get("modifiers", [])  # type: ignore[attr-defined]
             if key:
                 from MouseMasterLib.action_registry import KeyboardShortcutHandler
 
-                handler = KeyboardShortcutHandler(key, mods)
-                handler.execute(action_context)
+                kb_handler = KeyboardShortcutHandler(key, mods)
+                kb_handler.execute(action_context)
             return
 
         # Default: treat as slicer action
@@ -213,7 +213,7 @@ def _create_event_filter(handler: MouseMasterEventHandler) -> object:
     import qt
 
     class QtEventFilter(qt.QObject):
-        def __init__(self, parent: object = None) -> None:
+        def __init__(self, parent: Any = None) -> None:
             super().__init__(parent)
             self._handler = handler
             self._mouse_press = qt.QEvent.MouseButtonPress
@@ -221,7 +221,7 @@ def _create_event_filter(handler: MouseMasterEventHandler) -> object:
             # Track consumed buttons to also consume their release
             self._consumed_buttons: set[int] = set()
 
-        def eventFilter(self, obj: object, event: object) -> bool:
+        def eventFilter(self, obj: Any, event: Any) -> bool:
             event_type = event.type()
             if event_type == self._mouse_press:
                 button = int(event.button())

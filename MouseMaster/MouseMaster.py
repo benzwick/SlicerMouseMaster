@@ -12,10 +12,10 @@ from slicer.util import VTKObservationMixin
 
 # MouseMaster library imports
 from MouseMasterLib import MouseMasterEventHandler, PresetManager
-from MouseMasterLib.mouse_profile import MouseProfile
 from MouseMasterLib.action_registry import ActionRegistry
-from MouseMasterLib.preset_manager import Mapping
 from MouseMasterLib.button_detector import ButtonDetector
+from MouseMasterLib.mouse_profile import MouseProfile
+from MouseMasterLib.preset_manager import Mapping
 
 #
 # MouseMaster
