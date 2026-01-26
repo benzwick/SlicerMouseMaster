@@ -40,9 +40,9 @@ BUTTON_ID_MAP: dict[CanonicalButton, str] = {
     CanonicalButton.MIDDLE: "middle",
     CanonicalButton.BACK: "back",
     CanonicalButton.FORWARD: "forward",
-    CanonicalButton.EXTRA1: "extra1",
-    CanonicalButton.EXTRA2: "extra2",
-    CanonicalButton.EXTRA3: "extra3",
+    CanonicalButton.EXTRA1: "thumb",  # Button 32 - thumb button on MX Master etc.
+    CanonicalButton.EXTRA2: "extra1",
+    CanonicalButton.EXTRA3: "extra2",
 }
 
 

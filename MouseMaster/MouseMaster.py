@@ -573,16 +573,43 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         logging.info(f"Saved mouse profile to {profile_path}")
 
         # Create a default preset for the new mouse
-        default_mappings = {}
+        default_mappings: dict[str, Mapping] = {}
         for button in profile.get_remappable_buttons():
-            if button.default_action:
-                default_mappings[button.id] = Mapping(action=button.default_action)
-            elif button.id == "back":
-                default_mappings[button.id] = Mapping(action="edit_undo")
+            if button.id == "back":
+                # Default: previous module (like Slicer default Ctrl+Left)
+                default_mappings[button.id] = Mapping(
+                    action="keyboard_shortcut",
+                    parameters={"key": "Left", "modifiers": ["ctrl"]}
+                )
             elif button.id == "forward":
-                default_mappings[button.id] = Mapping(action="edit_redo")
+                # Default: next module (like Slicer default Ctrl+Right)
+                default_mappings[button.id] = Mapping(
+                    action="keyboard_shortcut",
+                    parameters={"key": "Right", "modifiers": ["ctrl"]}
+                )
             elif button.id == "middle":
                 default_mappings[button.id] = Mapping(action="view_reset_3d")
+            elif button.default_action:
+                default_mappings[button.id] = Mapping(action=button.default_action)
+
+        # Context mappings for editing modules
+        context_mappings: dict[str, dict[str, Mapping]] = {}
+        has_back = any(b.id == "back" for b in profile.get_remappable_buttons())
+        has_forward = any(b.id == "forward" for b in profile.get_remappable_buttons())
+        if has_back or has_forward:
+            # SegmentEditor and Markups: undo/redo (editing actions)
+            for module in ["SegmentEditor", "Markups"]:
+                context_mappings[module] = {}
+                if has_back:
+                    context_mappings[module]["back"] = Mapping(action="edit_undo")
+                if has_forward:
+                    context_mappings[module]["forward"] = Mapping(action="edit_redo")
+            # VolumeRendering: toggle visibility and reset view (viewing actions)
+            context_mappings["VolumeRendering"] = {}
+            if has_back:
+                context_mappings["VolumeRendering"]["back"] = Mapping(action="volumerendering_toggle")
+            if has_forward:
+                context_mappings["VolumeRendering"]["forward"] = Mapping(action="view_reset_3d")
 
         preset = Preset(
             id=f"default_{profile.id}",
@@ -590,6 +617,7 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             version="1.0",
             mouse_id=profile.id,
             mappings=default_mappings,
+            context_mappings=context_mappings,
             author="MouseMaster",
             description=f"Default preset for {profile.name}",
         )

@@ -10,32 +10,43 @@
       "action": "view_reset_3d"
     },
     "back": {
-      "action": "edit_undo"
+      "action": "keyboard_shortcut",
+      "parameters": {
+        "key": "Left",
+        "modifiers": ["ctrl"]
+      }
     },
     "forward": {
-      "action": "edit_redo"
+      "action": "keyboard_shortcut",
+      "parameters": {
+        "key": "Right",
+        "modifiers": ["ctrl"]
+      }
     }
   },
   "contextMappings": {
     "SegmentEditor": {
       "back": {
-        "action": "segment_previous"
+        "action": "edit_undo"
       },
       "forward": {
-        "action": "segment_next"
+        "action": "edit_redo"
       }
     },
     "Markups": {
       "back": {
-        "action": "markups_delete_point"
+        "action": "edit_undo"
       },
       "forward": {
-        "action": "markups_place_fiducial"
+        "action": "edit_redo"
       }
     },
     "VolumeRendering": {
       "back": {
         "action": "volumerendering_toggle"
+      },
+      "forward": {
+        "action": "view_reset_3d"
       }
     }
   }
