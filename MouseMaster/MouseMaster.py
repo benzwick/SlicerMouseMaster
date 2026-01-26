@@ -15,6 +15,7 @@ from MouseMasterLib import MouseMasterEventHandler, PresetManager
 from MouseMasterLib.mouse_profile import MouseProfile
 from MouseMasterLib.action_registry import ActionRegistry
 from MouseMasterLib.preset_manager import Mapping
+from MouseMasterLib.button_detector import ButtonDetector
 
 #
 # MouseMaster
@@ -140,6 +141,11 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.mouseSelector.addItem("-- Select Mouse --", "")
         mouseLayout.addRow("Mouse Model:", self.mouseSelector)
 
+        # Detect button
+        self.detectButton = qt.QPushButton("Detect New Mouse...")
+        self.detectButton.toolTip = "Detect button codes for an unlisted mouse"
+        mouseLayout.addRow(self.detectButton)
+
         # Collapsible button for preset management
         presetCollapsible = ctk.ctkCollapsibleButton()
         presetCollapsible.text = "Preset Management"
@@ -202,6 +208,7 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.presetSelector.connect("currentIndexChanged(int)", self.onPresetSelected)
         self.contextToggle.connect("toggled(bool)", self.onContextToggled)
         self.contextSelector.connect("currentIndexChanged(int)", self.onContextChanged)
+        self.detectButton.connect("clicked()", self.onDetectClicked)
 
         # Add stretch to push widgets to top
         self.layout.addStretch(1)
@@ -376,14 +383,23 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 self._updateMappingTable()
 
     def _loadMouseProfiles(self) -> None:
-        """Load mouse profiles from the MouseDefinitions directory."""
+        """Load mouse profiles from the MouseDefinitions directories."""
+        # Load built-in profiles
         module_dir = Path(__file__).parent
         definitions_dir = module_dir / "Resources" / "MouseDefinitions"
         if definitions_dir.exists():
             for json_file in definitions_dir.glob("*.json"):
                 profile = MouseProfile.from_json_file(json_file)
                 self._mouseProfiles[profile.id] = profile
-                logging.info(f"Loaded mouse profile: {profile.name}")
+                logging.info(f"Loaded built-in mouse profile: {profile.name}")
+
+        # Load user profiles (can override built-in)
+        user_dir = Path(slicer.app.slicerUserSettingsFilePath).parent / "MouseMaster" / "MouseDefinitions"
+        if user_dir.exists():
+            for json_file in user_dir.glob("*.json"):
+                profile = MouseProfile.from_json_file(json_file)
+                self._mouseProfiles[profile.id] = profile
+                logging.info(f"Loaded user mouse profile: {profile.name}")
 
     def onContextToggled(self, enabled: bool) -> None:
         """Handle context-sensitive toggle."""
@@ -522,6 +538,37 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # Refresh table
         self._updateMappingTable()
 
+    def onDetectClicked(self) -> None:
+        """Open the button detection wizard dialog."""
+        import qt
+
+        dialog = ButtonDetectionDialog(self.parent)
+        if dialog.exec() == qt.QDialog.Accepted:
+            # Get the generated profile
+            profile = dialog.getProfile()
+            if profile:
+                # Save the profile
+                self._saveDetectedProfile(profile)
+                # Refresh the mouse selector
+                self._populateMouseSelector()
+                # Select the new profile
+                index = self.mouseSelector.findData(profile.id)
+                if index >= 0:
+                    self.mouseSelector.setCurrentIndex(index)
+                logging.info(f"Added new mouse profile: {profile.name}")
+
+    def _saveDetectedProfile(self, profile: MouseProfile) -> None:
+        """Save a detected mouse profile to the user definitions directory."""
+        import json
+
+        user_dir = Path(slicer.app.slicerUserSettingsFilePath).parent / "MouseMaster" / "MouseDefinitions"
+        user_dir.mkdir(parents=True, exist_ok=True)
+        profile_path = user_dir / f"{profile.id}.json"
+        profile.to_json_file(profile_path)
+        # Add to loaded profiles
+        self._mouseProfiles[profile.id] = profile
+        logging.info(f"Saved mouse profile to {profile_path}")
+
     def _saveApplicationSettings(self) -> None:
         """Save current settings to Slicer application settings for persistence."""
         if not self._parameterNode:
@@ -550,6 +597,173 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         if enabled:
             self._parameterNode.enabled = enabled
         logging.info(f"[MouseMaster] Loaded settings: mouse={mouseId!r}, preset={presetId!r}, enabled={enabled}")
+
+
+#
+# ButtonDetectionDialog
+#
+
+
+class ButtonDetectionDialog:
+    """Dialog for interactive mouse button detection."""
+
+    def __init__(self, parent=None) -> None:
+        import qt
+
+        self._dialog = qt.QDialog(parent)
+        self._dialog.setWindowTitle("Detect Mouse Buttons")
+        self._dialog.setMinimumWidth(400)
+        self._dialog.setMinimumHeight(350)
+
+        self._detector = ButtonDetector()
+        self._profile: MouseProfile | None = None
+
+        self._setupUI()
+
+    def _setupUI(self) -> None:
+        import qt
+
+        layout = qt.QVBoxLayout(self._dialog)
+
+        # Instructions
+        self._instructionLabel = qt.QLabel(
+            "This wizard will detect your mouse's button codes.\n\n"
+            "Press each button on your mouse when prompted."
+        )
+        self._instructionLabel.setWordWrap(True)
+        layout.addWidget(self._instructionLabel)
+
+        # Prompt label (shows current detection step)
+        self._promptLabel = qt.QLabel("Click 'Start Detection' to begin.")
+        self._promptLabel.setStyleSheet("font-weight: bold; font-size: 14px; padding: 10px;")
+        self._promptLabel.setAlignment(qt.Qt.AlignCenter)
+        layout.addWidget(self._promptLabel)
+
+        # Detected buttons list
+        self._buttonList = qt.QListWidget()
+        self._buttonList.setMinimumHeight(100)
+        layout.addWidget(self._buttonList)
+
+        # Profile name input
+        nameLayout = qt.QHBoxLayout()
+        nameLabel = qt.QLabel("Profile Name:")
+        self._nameEdit = qt.QLineEdit()
+        self._nameEdit.setPlaceholderText("My Custom Mouse")
+        nameLayout.addWidget(nameLabel)
+        nameLayout.addWidget(self._nameEdit)
+        layout.addLayout(nameLayout)
+
+        # Buttons
+        buttonLayout = qt.QHBoxLayout()
+
+        self._startButton = qt.QPushButton("Start Detection")
+        self._startButton.connect("clicked()", self._onStartClicked)
+        buttonLayout.addWidget(self._startButton)
+
+        self._finishButton = qt.QPushButton("Finish Detection")
+        self._finishButton.enabled = False
+        self._finishButton.connect("clicked()", self._onFinishClicked)
+        buttonLayout.addWidget(self._finishButton)
+
+        self._saveButton = qt.QPushButton("Save Profile")
+        self._saveButton.enabled = False
+        self._saveButton.connect("clicked()", self._onSaveClicked)
+        buttonLayout.addWidget(self._saveButton)
+
+        self._cancelButton = qt.QPushButton("Cancel")
+        self._cancelButton.connect("clicked()", self._dialog.reject)
+        buttonLayout.addWidget(self._cancelButton)
+
+        layout.addLayout(buttonLayout)
+
+        # Install event filter for button detection
+        self._eventFilter = _DetectionEventFilter(self._dialog, self._onButtonPress)
+        self._dialog.installEventFilter(self._eventFilter)
+
+    def _onStartClicked(self) -> None:
+        """Start button detection."""
+        self._buttonList.clear()
+        self._detector.start_detection(
+            on_button=self._onButtonDetected,
+            on_complete=self._onDetectionComplete,
+            expected_buttons=8,
+        )
+        self._promptLabel.text = self._detector.get_session().current_prompt
+        self._startButton.enabled = False
+        self._finishButton.enabled = True
+        self._saveButton.enabled = False
+
+    def _onFinishClicked(self) -> None:
+        """Finish detection early."""
+        session = self._detector.finalize_detection()
+        if session:
+            self._promptLabel.text = "Detection complete!"
+            self._finishButton.enabled = False
+            self._saveButton.enabled = len(session.buttons) > 0
+
+    def _onButtonPress(self, qt_button: int) -> bool:
+        """Handle a button press during detection."""
+        if self._detector.is_detecting():
+            return self._detector.on_button_press(qt_button)
+        return False
+
+    def _onButtonDetected(self, detected) -> None:
+        """Callback when a button is detected."""
+        import qt
+
+        item = qt.QListWidgetItem(f"Button {detected.qt_button}: {detected.suggested_name}")
+        self._buttonList.addItem(item)
+        session = self._detector.get_session()
+        if session:
+            self._promptLabel.text = session.current_prompt
+
+    def _onDetectionComplete(self, session) -> None:
+        """Callback when detection is complete."""
+        self._promptLabel.text = "Detection complete!"
+        self._finishButton.enabled = False
+        self._saveButton.enabled = True
+
+    def _onSaveClicked(self) -> None:
+        """Save the detected profile."""
+        name = self._nameEdit.text.strip() or "Custom Mouse"
+        profile_id = name.lower().replace(" ", "_")
+
+        profile_dict = self._detector.generate_profile(
+            profile_id=profile_id,
+            profile_name=name,
+            vendor="Custom",
+        )
+        self._profile = MouseProfile.from_dict(profile_dict)
+        self._dialog.accept()
+
+    def exec(self) -> int:
+        """Show the dialog modally."""
+        return self._dialog.exec()
+
+    def getProfile(self) -> MouseProfile | None:
+        """Get the generated profile."""
+        return self._profile
+
+
+def _DetectionEventFilter(dialog, on_button_press):
+    """Create a Qt event filter for button detection."""
+    import qt
+
+    class EventFilter(qt.QObject):
+        def __init__(self, parent, callback) -> None:
+            super().__init__(parent)
+            self._callback = callback
+            self._mouse_press = qt.QEvent.MouseButtonPress
+
+        def eventFilter(self, obj, event) -> bool:
+            if event.type() == self._mouse_press:
+                button = int(event.button())
+                # Detect all buttons including standard ones
+                if self._callback(button):
+                    return True
+            return False
+
+    return EventFilter(dialog, on_button_press)
 
 
 #

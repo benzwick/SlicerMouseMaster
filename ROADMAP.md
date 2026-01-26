@@ -143,9 +143,9 @@ This document tracks the development milestones for SlicerMouseMaster.
 - [x] Profile generation from detected buttons
 
 ### UI
-- [ ] Detection wizard dialog
-- [ ] Button press visualization
-- [ ] Profile save dialog
+- [x] Detection wizard dialog
+- [x] Button press visualization
+- [x] Profile save dialog
 
 ---
 
