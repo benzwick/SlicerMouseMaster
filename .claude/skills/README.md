@@ -127,6 +127,7 @@ except ImportError:
 | `/audit-code-quality` | Code Quality | Scan for bad practices (fail-fast violations) |
 | `/fix-bad-practices` | Code Quality | Fix exception swallowing and error hiding |
 | `/autonomous-code-review` | Code Quality | Full autonomous code review and fix workflow |
+| `/generate-screenshots` | Submission | Capture UI screenshots for documentation |
 | `/extension-submission-checklist` | Submission | Review official Slicer requirements |
 | `/prepare-extension-metadata` | Submission | Generate CMakeLists.txt and JSON metadata |
 | `/validate-extension-submission` | Submission | Automated validation before submission |
@@ -148,10 +149,11 @@ except ImportError:
 ### For Extension Index Submission
 
 ```
-1. /extension-submission-checklist    # Review all requirements
-2. /prepare-extension-metadata        # Update CMakeLists.txt, generate JSON
-3. /validate-extension-submission     # Run automated checks
-4. /submit-to-extension-index         # Complete submission process
+1. /generate-screenshots              # Capture UI screenshots (requires Slicer)
+2. /extension-submission-checklist    # Review all requirements
+3. /prepare-extension-metadata        # Update CMakeLists.txt, generate JSON
+4. /validate-extension-submission     # Run automated checks
+5. /submit-to-extension-index         # Complete submission process
 ```
 
 ### For Code Quality Maintenance
