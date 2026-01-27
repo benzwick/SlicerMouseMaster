@@ -199,7 +199,7 @@ MouseMaster discovers Slicer menu actions automatically. They appear in the acti
 
 ### Where can I report bugs?
 
-Open an issue on GitHub: [SlicerMouseMaster Issues](https://github.com/username/SlicerMouseMaster/issues)
+Open an issue on GitHub: [SlicerMouseMaster Issues](https://github.com/benzwick/SlicerMouseMaster/issues)
 
 Include:
 - Slicer version

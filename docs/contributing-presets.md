@@ -141,7 +141,7 @@ Common Slicer modules for context-sensitive bindings:
 
 ### Option 1: GitHub Issue (Recommended)
 
-1. Go to the [SlicerMouseMaster repository](https://github.com/username/SlicerMouseMaster)
+1. Go to the [SlicerMouseMaster repository](https://github.com/benzwick/SlicerMouseMaster)
 2. Create a new issue with the title: `[Preset] Your Preset Name`
 3. Attach your `.json` preset file
 4. Include:

@@ -36,3 +36,6 @@ Thumbs.db
 build/
 dist/
 *.egg-info/
+
+# Documentation build
+docs/_build/

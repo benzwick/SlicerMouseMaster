@@ -2,6 +2,10 @@
 
 A 3D Slicer extension for advanced mouse customization, button remapping, and workflow optimization.
 
+![SlicerMouseMaster Main Interface](SlicerMouseMaster/Screenshots/main-ui.png)
+
+**[Full Documentation](https://benzwick.github.io/SlicerMouseMaster)** | [User Guide](https://benzwick.github.io/SlicerMouseMaster/user-guide/) | [Developer Guide](https://benzwick.github.io/SlicerMouseMaster/developer-guide/)
+
 ## Features
 
 - **Button Remapping**: Assign custom actions to mouse buttons (back, forward, thumb, etc.)
@@ -34,7 +38,7 @@ Don't see your mouse? Use the button detection wizard to create a custom profile
 ### From Source
 
 ```bash
-git clone https://github.com/username/SlicerMouseMaster.git
+git clone https://github.com/benzwick/SlicerMouseMaster.git
 # Add to Slicer's module paths
 ```
 
@@ -97,7 +101,7 @@ If your mouse isn't listed:
 3. The preset will be added to your list
 
 **Community Presets:**
-Browse community-submitted presets at our [GitHub Discussions](https://github.com/username/SlicerMouseMaster/discussions/categories/presets).
+Browse community-submitted presets at our [GitHub Discussions](https://github.com/benzwick/SlicerMouseMaster/discussions/categories/presets).
 
 ## Available Actions
 
@@ -173,9 +177,18 @@ Share your workflow presets with the community:
 2. Create a Discussion post in the "Presets" category
 3. Include: mouse model, workflow description, any special setup
 
+## Documentation
+
+For comprehensive documentation, visit the [documentation site](https://benzwick.github.io/SlicerMouseMaster):
+
+- [Installation Guide](https://benzwick.github.io/SlicerMouseMaster/user-guide/installation.html)
+- [Quick Start](https://benzwick.github.io/SlicerMouseMaster/user-guide/quick-start.html)
+- [Button Mapping](https://benzwick.github.io/SlicerMouseMaster/user-guide/button-mapping.html)
+- [Developer Guide](https://benzwick.github.io/SlicerMouseMaster/developer-guide/)
+
 ## License
 
-This project is licensed under the BSD 3-Clause License. See [LICENSE](LICENSE) for details.
+This project is licensed under the Apache License 2.0. See [LICENSE.txt](LICENSE.txt) for details.
 
 ## Acknowledgments
 

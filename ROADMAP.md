@@ -15,6 +15,7 @@ This document tracks the development milestones for SlicerMouseMaster.
 | v0.7.0 | Context-Sensitive Bindings | Complete |
 | v0.8.0 | Action Library | Complete |
 | v0.9.0 | Preset Sharing | Complete |
+| v0.10.0 | Documentation | Complete |
 | v1.0.0 | Production Ready | In Progress |
 
 ---
@@ -208,9 +209,46 @@ This document tracks the development milestones for SlicerMouseMaster.
 
 ---
 
+## v0.10.0 - Documentation
+
+**Goal**: Comprehensive documentation with GitHub Pages hosting.
+
+### Documentation Infrastructure
+- [x] Sphinx documentation setup with ReadTheDocs theme
+- [x] GitHub Pages deployment via GitHub Actions
+- [x] ReadTheDocs configuration for alternative hosting
+
+### User Documentation
+- [x] Installation guide
+- [x] Quick start guide
+- [x] Button mapping documentation with screenshots
+- [x] Presets guide with screenshots
+- [x] Context-sensitive bindings guide
+- [x] Troubleshooting guide
+
+### Developer Documentation
+- [x] Architecture overview
+- [x] Adding new actions guide
+- [x] Adding mouse profiles guide
+- [x] Testing documentation
+- [x] Contributing guidelines
+
+### Reference
+- [x] Actions reference
+- [x] Preset format specification
+- [x] ADR index
+
+### Extension Metadata
+- [x] LICENSE.txt (Apache 2.0)
+- [x] Updated CMakeLists.txt with correct URLs
+- [x] Fixed placeholder URLs throughout codebase
+- [x] ADR-011 documenting infrastructure decisions
+
+---
+
 ## v1.0.0 - Production Ready
 
-**Goal**: Complete documentation, testing, and Extension Index submission.
+**Goal**: Complete testing and Extension Index submission.
 
 ### Documentation
 - [x] Complete user guide with screenshots

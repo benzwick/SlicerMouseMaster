@@ -42,7 +42,7 @@ class MouseMaster(ScriptedLoadableModule):
         self.parent.helpText = _("""
 Mouse customization extension for 3D Slicer. Provides button remapping,
 workflow presets, and context-sensitive bindings for multi-button mice.
-See more information in <a href="https://github.com/username/SlicerMouseMaster#readme">module documentation</a>.
+See more information in <a href="https://github.com/benzwick/SlicerMouseMaster#readme">module documentation</a>.
 """)
         # TODO: replace with organization, grant and thanks
         self.parent.acknowledgementText = _("""

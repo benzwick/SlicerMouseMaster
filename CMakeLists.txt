@@ -4,11 +4,11 @@ project(SlicerMouseMaster)
 
 #-----------------------------------------------------------------------------
 # Extension meta-information
-set(EXTENSION_HOMEPAGE "https://www.slicer.org/wiki/Documentation/Nightly/Extensions/SlicerMouseMaster")
-set(EXTENSION_CONTRIBUTORS "John Doe (AnyWare Corp.)")
-set(EXTENSION_DESCRIPTION "This is an example of a simple extension")
-set(EXTENSION_ICONURL "https://www.example.com/Slicer/Extensions/SlicerMouseMaster.png")
-set(EXTENSION_SCREENSHOTURLS "https://www.example.com/Slicer/Extensions/SlicerMouseMaster/Screenshots/1.png")
+set(EXTENSION_HOMEPAGE "https://benzwick.github.io/SlicerMouseMaster")
+set(EXTENSION_CONTRIBUTORS "Ben Zwick")
+set(EXTENSION_DESCRIPTION "Advanced mouse button customization for multi-button mice with preset management and context-sensitive bindings.")
+set(EXTENSION_ICONURL "https://raw.githubusercontent.com/benzwick/SlicerMouseMaster/main/SlicerMouseMaster.png")
+set(EXTENSION_SCREENSHOTURLS "https://raw.githubusercontent.com/benzwick/SlicerMouseMaster/main/SlicerMouseMaster/Screenshots/main-ui.png https://raw.githubusercontent.com/benzwick/SlicerMouseMaster/main/SlicerMouseMaster/Screenshots/button-mapping.png")
 set(EXTENSION_DEPENDS "NA") # Specified as a list or "NA" if no dependencies
 
 #-----------------------------------------------------------------------------

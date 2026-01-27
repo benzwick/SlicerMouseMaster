@@ -4,14 +4,14 @@ version = "0.1.0"
 description = "3D Slicer extension for mouse customization and button remapping"
 readme = "README.md"
 requires-python = ">=3.9"
-license = { text = "BSD-3-Clause" }
+license = { text = "Apache-2.0" }
 authors = [{ name = "SlicerMouseMaster Contributors" }]
 keywords = ["3d-slicer", "mouse", "customization", "button-mapping"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Healthcare Industry",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: BSD License",
+    "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
@@ -32,16 +32,22 @@ dev = [
     "mypy>=1.0",
     "pre-commit>=3.0",
 ]
+docs = [
+    "sphinx>=7.0",
+    "sphinx-rtd-theme>=2.0",
+    "myst-parser>=2.0",
+    "linkify-it-py>=2.0",
+]
 # Optional Linux-only dependency for advanced button detection
 linux = [
     "evdev>=1.6.0",
 ]
 
 [project.urls]
-Homepage = "https://github.com/username/SlicerMouseMaster"
-Documentation = "https://github.com/username/SlicerMouseMaster#readme"
-Repository = "https://github.com/username/SlicerMouseMaster.git"
-Issues = "https://github.com/username/SlicerMouseMaster/issues"
+Homepage = "https://github.com/benzwick/SlicerMouseMaster"
+Documentation = "https://benzwick.github.io/SlicerMouseMaster"
+Repository = "https://github.com/benzwick/SlicerMouseMaster.git"
+Issues = "https://github.com/benzwick/SlicerMouseMaster/issues"
 
 [build-system]
 requires = ["hatchling"]

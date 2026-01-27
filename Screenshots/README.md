@@ -6,9 +6,9 @@ Screenshots for documentation and Extension Index submission.
 
 | Filename | Purpose | Status |
 |----------|---------|--------|
-| `main-ui.png` | Primary screenshot for Extension Index | ⏳ Pending |
-| `button-mapping.png` | Button mapping table detail | ⏳ Pending |
-| `preset-selector.png` | Preset management interface | ⏳ Pending |
+| `main-ui.png` | Primary screenshot for Extension Index | ✅ Complete |
+| `button-mapping.png` | Button mapping table detail | ✅ Complete |
+| `preset-selector.png` | Preset management interface | ✅ Complete |
 
 ## Generating Screenshots
 
