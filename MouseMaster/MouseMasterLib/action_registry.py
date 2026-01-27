@@ -270,14 +270,17 @@ class ActionRegistry:
             count = 0
             # Find all QActions in the main window
             for action in main.findChildren(qt.QAction):
-                name = action.objectName()
-                text = action.text.replace("&", "")  # Remove accelerator markers
+                # Handle both property and method access (Qt version differences)
+                name = action.objectName if isinstance(action.objectName, str) else action.objectName()
+                text_raw = action.text if isinstance(action.text, str) else action.text()
+                text = text_raw.replace("&", "")  # Remove accelerator markers
 
                 # Skip empty or system actions
                 if not name or not text:
                     continue
                 # Skip separators
-                if action.isSeparator():
+                is_sep = action.isSeparator if isinstance(action.isSeparator, bool) else action.isSeparator()
+                if is_sep:
                     continue
 
                 action_id = f"slicer_menu_{name}"

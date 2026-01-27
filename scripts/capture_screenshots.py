@@ -57,8 +57,8 @@ def capture_widget(widget, filepath: Path, size: tuple[int, int] | None = None) 
     import qt
 
     try:
-        # Grab the widget
-        pixmap = qt.QPixmap.grabWidget(widget)
+        # Grab the widget using modern API
+        pixmap = widget.grab()
 
         # Resize if requested
         if size:
