@@ -1,0 +1,20 @@
+{
+  "generated": "2026-01-27T10:09:23.276262",
+  "screenshots": [
+    {
+      "filename": "button-mapping.png",
+      "description": "Module panel with button mapping table for action assignments",
+      "size_bytes": 98093
+    },
+    {
+      "filename": "main-ui.png",
+      "description": "MouseMaster module in 3D Slicer showing button mapping configuration",
+      "size_bytes": 188650
+    },
+    {
+      "filename": "preset-selector.png",
+      "description": "Mouse model and preset selection interface",
+      "size_bytes": 52414
+    }
+  ]
+}
