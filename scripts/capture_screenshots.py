@@ -331,18 +331,89 @@ def generate_manifest(output_dir: Path | str | None = None) -> Path:
     return manifest_path
 
 
-# Main execution when run in Slicer console
-if __name__ == "__main__" or "slicer" in dir():
+def main() -> int:
+    """Main entry point for command-line execution.
+
+    Returns:
+        Exit code (0 for success, 1 for failure)
+    """
+    import sys
+
     print("SlicerMouseMaster Screenshot Capture")
     print("=" * 50)
+
+    # Parse arguments
+    args = sys.argv[1:] if len(sys.argv) > 1 else []
+    should_exit = "--exit" in args
+    interactive = "--interactive" in args or (not should_exit and not args)
+
+    if interactive:
+        # Interactive mode - just print help
+        print()
+        print("Available functions:")
+        print("  capture_main_ui()        - Main UI screenshot (for submission)")
+        print("  capture_button_mapping() - Button mapping table")
+        print("  capture_preset_selector()- Preset selector")
+        print("  capture_all_screenshots()- All screenshots")
+        print("  generate_manifest()      - Create manifest.json")
+        print()
+        print("Example:")
+        print("  capture_all_screenshots()")
+        print()
+        return 0
+
+    # Automatic mode - capture all screenshots
     print()
-    print("Available functions:")
-    print("  capture_main_ui()        - Main UI screenshot (for submission)")
-    print("  capture_button_mapping() - Button mapping table")
-    print("  capture_preset_selector()- Preset selector")
-    print("  capture_all_screenshots()- All screenshots")
-    print("  generate_manifest()      - Create manifest.json")
+    print("Capturing screenshots automatically...")
     print()
-    print("Example:")
-    print("  capture_all_screenshots()")
+
+    # Wait for Slicer UI to be ready
+    import qt
+    qt.QApplication.processEvents()
+
+    # Capture all screenshots
+    results = capture_all_screenshots()
+
+    # Generate manifest
+    generate_manifest()
+
+    # Count successes
+    success = sum(1 for v in results.values() if v is not None)
+    total = len(results)
+
     print()
+    print("=" * 50)
+    print(f"Result: {success}/{total} screenshots captured")
+
+    exit_code = 0 if success > 0 else 1
+
+    if should_exit:
+        print(f"Exiting Slicer with code {exit_code}")
+        import slicer
+        slicer.app.exit(exit_code)
+
+    return exit_code
+
+
+# Main execution when run in Slicer
+if __name__ == "__main__" or "slicer" in dir():
+    # Check if we're being run as a script (has sys.argv) or exec'd
+    import sys
+    if hasattr(sys, 'argv') and len(sys.argv) > 0 and 'capture_screenshots' in sys.argv[0]:
+        # Running as: Slicer --python-script capture_screenshots.py [--exit]
+        main()
+    else:
+        # Being exec'd in console - show help
+        print("SlicerMouseMaster Screenshot Capture")
+        print("=" * 50)
+        print()
+        print("Available functions:")
+        print("  capture_main_ui()        - Main UI screenshot (for submission)")
+        print("  capture_button_mapping() - Button mapping table")
+        print("  capture_preset_selector()- Preset selector")
+        print("  capture_all_screenshots()- All screenshots")
+        print("  generate_manifest()      - Create manifest.json")
+        print()
+        print("Or run automatically:")
+        print("  main()  # Capture all and generate manifest")
+        print()

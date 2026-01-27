@@ -10,8 +10,9 @@ Generate screenshots for Extension Index submission and documentation.
 
 ## Prerequisites
 
-- 3D Slicer running with MouseMaster module installed
-- Access to Slicer's Python console
+- 3D Slicer installed
+- SLICER_PATH configured in `.env` file
+- MouseMaster module available
 
 ## Screenshot Requirements
 
@@ -23,20 +24,35 @@ For Extension Index submission, need at minimum:
 | `button-mapping.png` | Detail of mapping interface | Optional |
 | `preset-selector.png` | Preset management | Optional |
 
-## Method 1: Automated Script
+## Method 1: Fully Automated (Recommended)
 
-### Step 1: Provide script path to user
+Run from terminal - launches Slicer, captures screenshots, exits:
 
-Tell user to run in Slicer's Python console:
+```bash
+# First, ensure .env has SLICER_PATH set
+cp .env.example .env
+# Edit .env to set your Slicer path
+
+# Then run:
+./scripts/run_in_slicer.sh scripts/capture_screenshots.py --exit
+```
+
+This will:
+1. Launch Slicer
+2. Load MouseMaster module
+3. Capture all screenshots to `Screenshots/`
+4. Generate `manifest.json`
+5. Exit Slicer
+6. Save log to `logs/`
+
+## Method 2: Interactive in Slicer Console
+
+If Slicer is already running, in Python console:
 
 ```python
 exec(open('/home/ben/projects/slicer-extensions/SlicerMouseMaster/SlicerMouseMaster/scripts/capture_screenshots.py').read())
-```
-
-### Step 2: Capture all screenshots
-
-```python
 capture_all_screenshots()
+generate_manifest()
 ```
 
 Or capture individually:
@@ -47,27 +63,7 @@ capture_button_mapping()   # Button mapping detail
 capture_preset_selector()  # Preset management
 ```
 
-### Step 3: Generate manifest
-
-```python
-generate_manifest()
-```
-
-### Step 4: Verify screenshots
-
-```bash
-ls -la Screenshots/
-```
-
-Expected output:
-```
-main-ui.png
-button-mapping.png
-preset-selector.png
-manifest.json
-```
-
-## Method 2: Manual Capture
+## Method 3: Manual Capture
 
 If automated capture fails:
 
