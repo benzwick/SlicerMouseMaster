@@ -18,6 +18,59 @@ import pytest
 MODULE_DIR = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(MODULE_DIR))
 
+# ============================================================================
+# Centralized Slicer/Qt/VTK mock setup
+# ============================================================================
+# These mocks must be installed in sys.modules BEFORE any MouseMasterLib
+# imports occur. This is done at module load time.
+
+_MOCK_SLICER = MagicMock(name="slicer")
+_MOCK_SLICER_UTIL = MagicMock(name="slicer.util")
+_MOCK_SLICER.util = _MOCK_SLICER_UTIL
+_MOCK_QT = MagicMock(name="qt")
+_MOCK_CTK = MagicMock(name="ctk")
+_MOCK_VTK = MagicMock(name="vtk")
+_MOCK_SLICER_SCRIPTED = MagicMock(name="slicer.ScriptedLoadableModule")
+
+# Install mocks in sys.modules
+sys.modules["slicer"] = _MOCK_SLICER
+sys.modules["slicer.util"] = _MOCK_SLICER_UTIL
+sys.modules["qt"] = _MOCK_QT
+sys.modules["ctk"] = _MOCK_CTK
+sys.modules["vtk"] = _MOCK_VTK
+sys.modules["slicer.ScriptedLoadableModule"] = _MOCK_SLICER_SCRIPTED
+
+
+@pytest.fixture(autouse=True)
+def reset_slicer_mocks():
+    """Reset all Slicer/Qt mocks before each test to ensure isolation."""
+    _MOCK_SLICER.reset_mock()
+    _MOCK_SLICER_UTIL.reset_mock()
+    _MOCK_QT.reset_mock()
+    _MOCK_CTK.reset_mock()
+    _MOCK_VTK.reset_mock()
+    _MOCK_SLICER_SCRIPTED.reset_mock()
+
+    # Re-establish the slicer.util relationship after reset
+    _MOCK_SLICER.util = _MOCK_SLICER_UTIL
+
+    yield
+
+
+def get_mock_slicer():
+    """Get the centralized slicer mock."""
+    return _MOCK_SLICER
+
+
+def get_mock_slicer_util():
+    """Get the centralized slicer.util mock."""
+    return _MOCK_SLICER_UTIL
+
+
+def get_mock_qt():
+    """Get the centralized qt mock."""
+    return _MOCK_QT
+
 
 @pytest.fixture
 def sample_mouse_profile_data() -> dict[str, Any]:
