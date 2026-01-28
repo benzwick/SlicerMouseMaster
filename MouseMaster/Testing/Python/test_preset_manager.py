@@ -229,9 +229,7 @@ class TestPresetManager:
 
         assert len(manager.get_all_presets()) == 0
 
-    def test_load_from_directory(
-        self, tmp_path: Path, sample_preset_data: dict
-    ) -> None:
+    def test_load_from_directory(self, tmp_path: Path, sample_preset_data: dict) -> None:
         """Test loading presets from directory."""
         from MouseMasterLib.preset_manager import PresetManager
 
@@ -267,9 +265,7 @@ class TestPresetManager:
 
         assert manager.get_preset("nonexistent") is None
 
-    def test_get_presets_for_mouse(
-        self, tmp_path: Path, sample_preset_data: dict
-    ) -> None:
+    def test_get_presets_for_mouse(self, tmp_path: Path, sample_preset_data: dict) -> None:
         """Test getting presets for a specific mouse."""
         from MouseMasterLib.preset_manager import PresetManager
 
@@ -330,9 +326,7 @@ class TestPresetManager:
         assert not (user_dir / "test_preset.json").exists()
         assert manager.delete_preset("test_preset") is False
 
-    def test_export_import_preset(
-        self, tmp_path: Path, sample_preset_data: dict
-    ) -> None:
+    def test_export_import_preset(self, tmp_path: Path, sample_preset_data: dict) -> None:
         """Test exporting and importing a preset."""
         from MouseMasterLib.preset_manager import Preset, PresetManager
 

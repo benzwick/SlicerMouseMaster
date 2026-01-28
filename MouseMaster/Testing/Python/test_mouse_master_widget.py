@@ -3,8 +3,7 @@
 These tests mock Slicer/Qt dependencies to test widget logic without running inside Slicer.
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock
 
 # Mocks are set up centrally in conftest.py - no need to set up sys.modules here
 
@@ -15,7 +14,7 @@ class TestOnActionChanged:
     def setup_method(self):
         """Set up test fixtures."""
         # Import after mocking
-        from MouseMasterLib.preset_manager import PresetManager, Preset, Mapping
+        from MouseMasterLib.preset_manager import Mapping, Preset, PresetManager
 
         self.PresetManager = PresetManager
         self.Preset = Preset
@@ -64,7 +63,11 @@ class TestOnActionChanged:
                 action_id = combo.currentData
                 context = None
                 if self.contextToggle.checked:
-                    context = self.contextSelector.currentData if self.contextSelector.currentData else None
+                    context = (
+                        self.contextSelector.currentData
+                        if self.contextSelector.currentData
+                        else None
+                    )
 
                 if action_id:
                     from MouseMasterLib.preset_manager import Mapping
@@ -234,7 +237,11 @@ class TestOnActionChanged:
                 action_id = combo.currentData
                 context = None
                 if self.contextToggle.checked:
-                    context = self.contextSelector.currentData if self.contextSelector.currentData else None
+                    context = (
+                        self.contextSelector.currentData
+                        if self.contextSelector.currentData
+                        else None
+                    )
 
                 if action_id:
                     preset.set_mapping(button_id, MagicMock(), context)
@@ -267,7 +274,7 @@ class TestLambdaCapture:
         button_id = "back"
 
         # Create the lambda like in the real code
-        handler = lambda idx, b=button_id, c=mock_combo: mock_on_action_changed(b, idx, c)
+        handler = lambda idx, b=button_id, c=mock_combo: mock_on_action_changed(b, idx, c)  # noqa: E731
 
         # Simulate signal emission
         handler(5)
@@ -292,7 +299,7 @@ class TestLambdaCapture:
             combo = MagicMock()
             combo.name = f"combo_{button_id}"
             # This is how the real code creates lambdas
-            h = lambda idx, b=button_id, c=combo: handler(b, idx, c)
+            h = lambda idx, b=button_id, c=combo: handler(b, idx, c)  # noqa: E731
             handlers.append(h)
 
         # Simulate all handlers being called
@@ -372,6 +379,6 @@ class TestWidgetNoSender:
             )
             if match:
                 method_body = match.group(1)
-                assert (
-                    "self.sender()" not in method_body
-                ), "_onActionChanged should not use self.sender()"
+                assert "self.sender()" not in method_body, (
+                    "_onActionChanged should not use self.sender()"
+                )

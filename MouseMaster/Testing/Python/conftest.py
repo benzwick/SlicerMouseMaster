@@ -72,6 +72,43 @@ def get_mock_qt():
     return _MOCK_QT
 
 
+# =============================================================================
+# Pytest markers
+# =============================================================================
+
+
+def pytest_configure(config):
+    """Register custom markers."""
+    config.addinivalue_line(
+        "markers",
+        "requires_slicer: mark test as requiring Slicer environment (skipped in standalone pytest)",
+    )
+
+
+def pytest_collection_modifyitems(config, items):
+    """Skip tests marked with requires_slicer when running outside Slicer."""
+    # Check if we're running inside real Slicer (not mocked)
+    # The real Slicer module has a specific attribute structure
+    try:
+        import slicer
+
+        # Real Slicer has slicer.mrmlScene which is a vtkMRMLScene, not a MagicMock
+        in_slicer = (
+            hasattr(slicer, "mrmlScene")
+            and not isinstance(slicer.mrmlScene, MagicMock)
+            and hasattr(slicer, "app")
+            and not isinstance(slicer.app, MagicMock)
+        )
+    except (ImportError, AttributeError):
+        in_slicer = False
+
+    if not in_slicer:
+        skip_slicer = pytest.mark.skip(reason="Test requires Slicer environment")
+        for item in items:
+            if "requires_slicer" in item.keywords:
+                item.add_marker(skip_slicer)
+
+
 @pytest.fixture
 def sample_mouse_profile_data() -> dict[str, Any]:
     """Sample mouse profile data for testing."""

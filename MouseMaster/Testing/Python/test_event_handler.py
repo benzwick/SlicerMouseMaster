@@ -3,11 +3,10 @@
 These tests mock Slicer/Qt dependencies to test event handler logic without running inside Slicer.
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
 
 # Import centralized mocks from conftest
-from conftest import get_mock_slicer, get_mock_slicer_util, get_mock_qt
+from conftest import get_mock_qt, get_mock_slicer, get_mock_slicer_util
 
 # Get local references to mocks (they're reset before each test by conftest fixture)
 mock_slicer = get_mock_slicer()
@@ -329,9 +328,7 @@ class TestMouseMasterEventHandlerExecuteMapping:
         mock_normalized.button_id = "back"
         mock_normalized.modifiers = set()
 
-        with patch(
-            "MouseMasterLib.action_registry.PythonCommandHandler"
-        ) as MockPythonHandler:
+        with patch("MouseMasterLib.action_registry.PythonCommandHandler") as MockPythonHandler:
             mock_handler_instance = MagicMock()
             MockPythonHandler.return_value = mock_handler_instance
 
@@ -354,9 +351,7 @@ class TestMouseMasterEventHandlerExecuteMapping:
         mock_normalized.button_id = "back"
         mock_normalized.modifiers = set()
 
-        with patch(
-            "MouseMasterLib.action_registry.KeyboardShortcutHandler"
-        ) as MockKeyboardHandler:
+        with patch("MouseMasterLib.action_registry.KeyboardShortcutHandler") as MockKeyboardHandler:
             mock_handler_instance = MagicMock()
             MockKeyboardHandler.return_value = mock_handler_instance
 
@@ -398,8 +393,9 @@ class TestInstallVtkObservers:
 
     def test_install_vtk_observers_no_layout_manager(self):
         """Test handling when layout manager is not available."""
-        from MouseMasterLib.event_handler import MouseMasterEventHandler
         import slicer
+
+        from MouseMasterLib.event_handler import MouseMasterEventHandler
 
         handler = MouseMasterEventHandler()
         handler._qt_handler = MagicMock()
@@ -414,8 +410,9 @@ class TestInstallVtkObservers:
 
     def test_install_vtk_observers_with_views(self):
         """Test installing observers on slice and 3D views."""
-        from MouseMasterLib.event_handler import MouseMasterEventHandler
         import slicer
+
+        from MouseMasterLib.event_handler import MouseMasterEventHandler
 
         handler = MouseMasterEventHandler()
         handler._qt_handler = MagicMock()
@@ -454,7 +451,7 @@ class TestCreateEventFilter:
 
     def test_create_event_filter_returns_object(self):
         """Test that _create_event_filter returns a Qt object."""
-        from MouseMasterLib.event_handler import _create_event_filter, MouseMasterEventHandler
+        from MouseMasterLib.event_handler import MouseMasterEventHandler, _create_event_filter
 
         handler = MouseMasterEventHandler()
 
@@ -473,8 +470,9 @@ class TestGetCurrentContext:
 
     def test_get_current_context_returns_module_name(self):
         """Test getting current module context."""
-        from MouseMasterLib.event_handler import MouseMasterEventHandler
         import slicer.util
+
+        from MouseMasterLib.event_handler import MouseMasterEventHandler
 
         handler = MouseMasterEventHandler()
 
@@ -486,8 +484,9 @@ class TestGetCurrentContext:
 
     def test_get_current_context_returns_default_when_none(self):
         """Test that default context is returned when no module selected."""
-        from MouseMasterLib.event_handler import MouseMasterEventHandler
         import slicer.util
+
+        from MouseMasterLib.event_handler import MouseMasterEventHandler
 
         handler = MouseMasterEventHandler()
 

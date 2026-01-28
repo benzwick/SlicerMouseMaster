@@ -3,11 +3,10 @@
 These tests mock Slicer/Qt dependencies to test action registry logic without running inside Slicer.
 """
 
-import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 # Import centralized mocks from conftest
-from conftest import get_mock_slicer, get_mock_slicer_util, get_mock_qt
+from conftest import get_mock_qt, get_mock_slicer, get_mock_slicer_util
 
 # Get local references to mocks (they're reset before each test by conftest fixture)
 mock_slicer = get_mock_slicer()
@@ -88,7 +87,7 @@ class TestCallableHandler:
 
     def test_execute_calls_function(self):
         """Test that execute calls the wrapped function."""
-        from MouseMasterLib.action_registry import CallableHandler, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, CallableHandler
 
         called = []
 
@@ -107,7 +106,7 @@ class TestCallableHandler:
 
     def test_is_available_default_true(self):
         """Test that is_available returns True by default."""
-        from MouseMasterLib.action_registry import CallableHandler, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, CallableHandler
 
         handler = CallableHandler(lambda ctx: True)
         context = ActionContext()
@@ -116,7 +115,7 @@ class TestCallableHandler:
 
     def test_is_available_with_check(self):
         """Test is_available with custom check function."""
-        from MouseMasterLib.action_registry import CallableHandler, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, CallableHandler
 
         handler = CallableHandler(
             lambda ctx: True, available_check=lambda ctx: ctx.module_name == "SegmentEditor"
@@ -131,7 +130,7 @@ class TestSlicerActionHandler:
 
     def test_execute_triggers_action(self):
         """Test that execute triggers the Slicer menu action."""
-        from MouseMasterLib.action_registry import SlicerActionHandler, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, SlicerActionHandler
 
         # Set up mock action
         mock_action = MagicMock()
@@ -151,7 +150,7 @@ class TestSlicerActionHandler:
 
     def test_execute_no_main_window(self):
         """Test execute when main window is not available."""
-        from MouseMasterLib.action_registry import SlicerActionHandler, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, SlicerActionHandler
 
         mock_slicer_util.mainWindow.return_value = None
 
@@ -164,7 +163,7 @@ class TestSlicerActionHandler:
 
     def test_execute_action_not_found(self):
         """Test execute when action is not found."""
-        from MouseMasterLib.action_registry import SlicerActionHandler, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, SlicerActionHandler
 
         mock_main_window = MagicMock()
         mock_main_window.findChild.return_value = None
@@ -183,7 +182,7 @@ class TestPythonCommandHandler:
 
     def test_execute_returns_true(self):
         """Test that execute returns True on success."""
-        from MouseMasterLib.action_registry import PythonCommandHandler, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, PythonCommandHandler
 
         # Simple command that just passes
         handler = PythonCommandHandler("pass")
@@ -195,7 +194,7 @@ class TestPythonCommandHandler:
 
     def test_execute_has_slicer_available(self):
         """Test that slicer is available in the command namespace."""
-        from MouseMasterLib.action_registry import PythonCommandHandler, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, PythonCommandHandler
 
         # Command that uses slicer - this verifies slicer is in namespace
         handler = PythonCommandHandler("x = slicer")
@@ -207,7 +206,7 @@ class TestPythonCommandHandler:
 
     def test_execute_has_context_available(self):
         """Test that context is available in the command namespace."""
-        from MouseMasterLib.action_registry import PythonCommandHandler, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, PythonCommandHandler
 
         # Command that accesses context
         handler = PythonCommandHandler("x = context.module_name")
@@ -241,7 +240,7 @@ class TestKeyboardShortcutHandler:
 
     def test_execute_posts_key_event(self):
         """Test that execute posts a key event."""
-        from MouseMasterLib.action_registry import KeyboardShortcutHandler, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, KeyboardShortcutHandler
 
         # Set up mocks
         mock_main_window = MagicMock()
@@ -264,7 +263,7 @@ class TestKeyboardShortcutHandler:
 
     def test_execute_no_main_window(self):
         """Test execute when main window is not available."""
-        from MouseMasterLib.action_registry import KeyboardShortcutHandler, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, KeyboardShortcutHandler
 
         mock_slicer_util.mainWindow.return_value = None
 
@@ -277,7 +276,7 @@ class TestKeyboardShortcutHandler:
 
     def test_execute_unknown_key(self):
         """Test execute with unknown key."""
-        from MouseMasterLib.action_registry import KeyboardShortcutHandler, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, KeyboardShortcutHandler
 
         mock_main_window = MagicMock()
         mock_slicer_util.mainWindow.return_value = mock_main_window
@@ -331,9 +330,7 @@ class TestActionRegistry:
         registry = ActionRegistry()
         handler = CallableHandler(lambda ctx: True)
 
-        registry.register(
-            "test_action", handler, "test_category", "Test description", "test-icon"
-        )
+        registry.register("test_action", handler, "test_category", "Test description", "test-icon")
 
         assert "test_action" in registry._actions
         entry = registry._actions["test_action"]
@@ -407,7 +404,7 @@ class TestActionRegistry:
 
     def test_execute_action(self):
         """Test executing an action."""
-        from MouseMasterLib.action_registry import ActionRegistry, CallableHandler, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, ActionRegistry, CallableHandler
 
         executed = []
 
@@ -427,7 +424,7 @@ class TestActionRegistry:
 
     def test_execute_nonexistent_action(self):
         """Test executing a nonexistent action."""
-        from MouseMasterLib.action_registry import ActionRegistry, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, ActionRegistry
 
         registry = ActionRegistry()
         context = ActionContext()
@@ -438,7 +435,7 @@ class TestActionRegistry:
 
     def test_execute_unavailable_action(self):
         """Test executing an unavailable action."""
-        from MouseMasterLib.action_registry import ActionRegistry, CallableHandler, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, ActionRegistry, CallableHandler
 
         registry = ActionRegistry()
         handler = CallableHandler(lambda ctx: True, available_check=lambda ctx: False)
@@ -632,7 +629,7 @@ class TestBuiltinActionImplementations:
 
     def test_do_undo_segment_editor(self):
         """Test undo in SegmentEditor context."""
-        from MouseMasterLib.action_registry import ActionRegistry, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, ActionRegistry
 
         mock_editor = MagicMock()
         mock_widget_self = MagicMock()
@@ -650,7 +647,7 @@ class TestBuiltinActionImplementations:
 
     def test_do_undo_other_module(self):
         """Test undo in non-SegmentEditor context."""
-        from MouseMasterLib.action_registry import ActionRegistry, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, ActionRegistry
 
         mock_slicer.reset_mock()
         context = ActionContext(module_name="Data")
@@ -661,7 +658,7 @@ class TestBuiltinActionImplementations:
 
     def test_do_redo_segment_editor(self):
         """Test redo in SegmentEditor context."""
-        from MouseMasterLib.action_registry import ActionRegistry, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, ActionRegistry
 
         mock_editor = MagicMock()
         mock_widget_self = MagicMock()
@@ -679,7 +676,7 @@ class TestBuiltinActionImplementations:
 
     def test_do_redo_other_module(self):
         """Test redo in non-SegmentEditor context."""
-        from MouseMasterLib.action_registry import ActionRegistry, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, ActionRegistry
 
         mock_slicer.reset_mock()
         context = ActionContext(module_name="Data")
@@ -690,7 +687,7 @@ class TestBuiltinActionImplementations:
 
     def test_reset_3d_view(self):
         """Test reset 3D view."""
-        from MouseMasterLib.action_registry import ActionRegistry, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, ActionRegistry
 
         mock_view = MagicMock()
         mock_widget = MagicMock()
@@ -711,7 +708,7 @@ class TestBuiltinActionImplementations:
 
     def test_toggle_crosshair(self):
         """Test toggle crosshair."""
-        from MouseMasterLib.action_registry import ActionRegistry, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, ActionRegistry
 
         mock_crosshair = MagicMock()
         mock_crosshair.GetCrosshairMode.return_value = 0
@@ -725,21 +722,24 @@ class TestBuiltinActionImplementations:
 
     def test_is_segment_editor_active(self):
         """Test segment editor context check."""
-        from MouseMasterLib.action_registry import ActionRegistry, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, ActionRegistry
 
-        assert ActionRegistry._is_segment_editor_active(ActionContext(module_name="SegmentEditor")) is True
+        assert (
+            ActionRegistry._is_segment_editor_active(ActionContext(module_name="SegmentEditor"))
+            is True
+        )
         assert ActionRegistry._is_segment_editor_active(ActionContext(module_name="Data")) is False
 
     def test_is_markups_active(self):
         """Test markups context check."""
-        from MouseMasterLib.action_registry import ActionRegistry, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, ActionRegistry
 
         assert ActionRegistry._is_markups_active(ActionContext(module_name="Markups")) is True
         assert ActionRegistry._is_markups_active(ActionContext(module_name="Data")) is False
 
     def test_next_segment(self):
         """Test next segment selection."""
-        from MouseMasterLib.action_registry import ActionRegistry, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, ActionRegistry
 
         # Set up mock segmentation
         mock_seg = MagicMock()
@@ -768,7 +768,7 @@ class TestBuiltinActionImplementations:
 
     def test_previous_segment(self):
         """Test previous segment selection."""
-        from MouseMasterLib.action_registry import ActionRegistry, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, ActionRegistry
 
         # Set up mock segmentation
         mock_seg = MagicMock()
@@ -797,7 +797,7 @@ class TestBuiltinActionImplementations:
 
     def test_add_segment(self):
         """Test adding a new segment."""
-        from MouseMasterLib.action_registry import ActionRegistry, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, ActionRegistry
 
         mock_seg = MagicMock()
         mock_seg.AddEmptySegment.return_value = "new_segment_id"
@@ -824,7 +824,7 @@ class TestBuiltinActionImplementations:
 
     def test_place_fiducial(self):
         """Test placing fiducial."""
-        from MouseMasterLib.action_registry import ActionRegistry, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, ActionRegistry
 
         mock_interaction = MagicMock()
         mock_interaction.Place = 1
@@ -845,7 +845,7 @@ class TestBuiltinActionImplementations:
 
     def test_delete_markup_point(self):
         """Test deleting a markup point."""
-        from MouseMasterLib.action_registry import ActionRegistry, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, ActionRegistry
 
         mock_markup = MagicMock()
         mock_markup.GetNumberOfControlPoints.return_value = 5
@@ -867,7 +867,7 @@ class TestBuiltinActionImplementations:
 
     def test_delete_markup_point_no_active_node(self):
         """Test deleting markup point when no active node."""
-        from MouseMasterLib.action_registry import ActionRegistry, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, ActionRegistry
 
         mock_selection = MagicMock()
         mock_selection.GetActivePlaceNodeID.return_value = ""
@@ -884,7 +884,7 @@ class TestBuiltinActionImplementations:
 
     def test_toggle_volume_rendering(self):
         """Test toggling volume rendering."""
-        from MouseMasterLib.action_registry import ActionRegistry, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, ActionRegistry
 
         mock_node = MagicMock()
         mock_node.GetVisibility.return_value = True
@@ -906,7 +906,7 @@ class TestSetSegmentEditorEffect:
 
     def test_creates_handler_function(self):
         """Test that factory creates a working handler."""
-        from MouseMasterLib.action_registry import ActionRegistry, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, ActionRegistry
 
         mock_editor = MagicMock()
         mock_widget_self = MagicMock()
@@ -926,7 +926,7 @@ class TestSetSegmentEditorEffect:
 
     def test_returns_false_when_no_widget(self):
         """Test handler returns False when editor widget unavailable."""
-        from MouseMasterLib.action_registry import ActionRegistry, ActionContext
+        from MouseMasterLib.action_registry import ActionContext, ActionRegistry
 
         mock_slicer.modules.segmenteditor.widgetRepresentation.return_value = None
 
