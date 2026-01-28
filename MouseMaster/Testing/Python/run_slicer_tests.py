@@ -144,7 +144,11 @@ def run_tests():
         try:
             if hasattr(widget, 'mappingTable'):
                 capture.capture_widget(widget.mappingTable, "Mapping table")
-                print(f"  PASSED: Mapping table has {widget.mappingTable.rowCount()} rows")
+                # Handle both property and method access for rowCount
+                row_count = widget.mappingTable.rowCount
+                if callable(row_count):
+                    row_count = row_count()
+                print(f"  PASSED: Mapping table has {row_count} rows")
                 results['passed'] += 1
             else:
                 print("  SKIPPED: No mapping table")
@@ -162,15 +166,16 @@ def run_tests():
         # Also run the built-in module tests
         print("\n" + "=" * 60)
         print("Running MouseMaster built-in tests...")
-        import MouseMaster
-        test = MouseMaster.MouseMasterTest()
-        builtin_success = test.runTest()
-        if builtin_success:
+        try:
+            import MouseMaster
+            test = MouseMaster.MouseMasterTest()
+            test.runTest()  # Raises exception on failure, returns None on success
             print("Built-in tests: PASSED")
             results['passed'] += 1
-        else:
-            print("Built-in tests: FAILED")
+        except Exception as e:
+            print(f"Built-in tests: FAILED - {e}")
             results['failed'] += 1
+            results['errors'].append(f"Built-in tests: {e}")
 
     except Exception as e:
         print(f"\nERROR: {e}")
