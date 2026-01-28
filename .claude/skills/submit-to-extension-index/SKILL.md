@@ -1,3 +1,15 @@
+---
+name: Submit to Extension Index
+description: Complete workflow for submitting an extension to the 3D Slicer Extension Index
+allowed-tools:
+  - WebFetch
+  - Bash
+  - Read
+  - Write
+  - Grep
+context: manual
+---
+
 # Submit to Extension Index Skill
 
 Complete workflow agent for submitting an extension to the 3D Slicer Extension Index.

@@ -1,3 +1,12 @@
+---
+name: Export Preset
+description: Help user export a preset configuration for sharing or backup
+allowed-tools:
+  - Read
+  - Bash
+context: manual
+---
+
 # Export Preset Skill
 
 Help user export a preset for sharing.

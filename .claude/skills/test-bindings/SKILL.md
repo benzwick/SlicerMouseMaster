@@ -1,3 +1,11 @@
+---
+name: Test Bindings
+description: Interactively test mouse button bindings in Slicer
+allowed-tools:
+  - Read
+context: manual
+---
+
 # Test Bindings Skill
 
 Interactively test mouse button bindings in Slicer.

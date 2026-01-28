@@ -1,3 +1,14 @@
+---
+name: Autonomous Code Review
+description: Run comprehensive code quality checks, tests, and fixes autonomously
+allowed-tools:
+  - Bash
+  - Read
+  - Grep
+  - Edit
+context: auto
+---
+
 # Autonomous Code Review Skill
 
 Run comprehensive code quality checks, tests, and fixes without human intervention.

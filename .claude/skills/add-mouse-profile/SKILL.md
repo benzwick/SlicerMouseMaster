@@ -1,3 +1,14 @@
+---
+name: Add Mouse Profile
+description: Create a new mouse profile for a mouse model not yet supported
+allowed-tools:
+  - Read
+  - Write
+  - Glob
+  - Grep
+context: manual
+---
+
 # Add Mouse Profile Skill
 
 Create a new mouse profile for MouseMaster.

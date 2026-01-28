@@ -1,3 +1,13 @@
+---
+name: Audit Code Quality
+description: Scan codebase for bad coding practices that violate fail-fast principles
+allowed-tools:
+  - Bash
+  - Grep
+  - Read
+context: auto
+---
+
 # Audit Code Quality Skill
 
 Systematically scan codebase for bad coding practices that violate fail-fast principles.

@@ -1,3 +1,12 @@
+---
+name: Generate Screenshots
+description: Generate screenshots for Extension Index submission and documentation
+allowed-tools:
+  - Bash
+  - Read
+context: manual
+---
+
 # Generate Screenshots Skill
 
 Generate screenshots for Extension Index submission and documentation.

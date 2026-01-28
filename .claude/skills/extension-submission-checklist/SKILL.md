@@ -1,3 +1,13 @@
+---
+name: Extension Submission Checklist
+description: Review and track progress against official 3D Slicer Extension Index requirements
+allowed-tools:
+  - WebFetch
+  - Bash
+  - Read
+context: manual
+---
+
 # Extension Submission Checklist Skill
 
 Review and track progress against the official 3D Slicer Extension Index submission requirements.

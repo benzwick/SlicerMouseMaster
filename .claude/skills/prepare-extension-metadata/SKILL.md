@@ -1,3 +1,15 @@
+---
+name: Prepare Extension Metadata
+description: Prepare and generate all required metadata files for Extension Index submission
+allowed-tools:
+  - WebFetch
+  - Bash
+  - Read
+  - Write
+  - Grep
+context: manual
+---
+
 # Prepare Extension Metadata Skill
 
 Prepare and generate all required metadata files for Extension Index submission.

@@ -1,3 +1,12 @@
+---
+name: Run Tests
+description: Run the full test suite with linting, type checking, and code quality audit
+allowed-tools:
+  - Bash
+  - Grep
+context: auto
+---
+
 # Run Tests Skill
 
 Run the full test suite with linting, type checking, and code quality audit.

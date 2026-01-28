@@ -1,3 +1,14 @@
+---
+name: Fix Bad Practices
+description: Fix bad coding practices identified by audit, following fail-fast principles
+allowed-tools:
+  - Read
+  - Edit
+  - Bash
+  - Grep
+context: auto
+---
+
 # Fix Bad Practices Skill
 
 Systematically fix bad coding practices identified by audit, following fail-fast principles.

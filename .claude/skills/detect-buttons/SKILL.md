@@ -1,3 +1,11 @@
+---
+name: Detect Buttons
+description: Guide user through button detection for an unknown mouse using Slicer Python console
+allowed-tools:
+  - Read
+context: manual
+---
+
 # Detect Buttons Skill
 
 Guide user through button detection for an unknown mouse.

@@ -1,3 +1,14 @@
+---
+name: Validate Extension Submission
+description: Validate that an extension meets all requirements for Extension Index submission
+allowed-tools:
+  - WebFetch
+  - Bash
+  - Grep
+  - Read
+context: auto
+---
+
 # Validate Extension Submission Skill
 
 Automatically validate that an extension meets all requirements for Extension Index submission.
