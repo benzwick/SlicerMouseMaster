@@ -51,6 +51,9 @@ except SomeError:
 | `/fix-bad-practices` | Fix exception swallowing and error hiding |
 | `/autonomous-code-review` | Full autonomous review and fix workflow |
 | `/generate-screenshots` | Capture UI screenshots for documentation |
+| `/download-ci-artifacts` | Download test results and screenshots from GitHub Actions |
+| `/analyze-test-results` | Analyze test failures and fix bugs |
+| `/review-ui-screenshots` | Analyze UI screenshots for issues and improvements |
 | `/extension-submission-checklist` | Review official Slicer requirements |
 | `/prepare-extension-metadata` | Generate CMakeLists.txt and JSON metadata |
 | `/validate-extension-submission` | Automated validation before submission |
@@ -94,6 +97,20 @@ Autonomous:
 /autonomous-code-review      # Full audit, fix, verify cycle
 ```
 
+### CI Failure Analysis
+
+```
+1. /download-ci-artifacts    # Get test results and screenshots
+2. /analyze-test-results     # Identify and fix failures
+3. /review-ui-screenshots    # Check UI for issues
+4. /run-tests                # Verify fixes locally
+```
+
+Or use the ci-analyzer agent:
+```
+Run the ci-analyzer agent
+```
+
 ## Agents
 
 See `.claude/agents/` for autonomous workflows that combine multiple skills.
@@ -101,6 +118,9 @@ See `.claude/agents/` for autonomous workflows that combine multiple skills.
 | Agent | Purpose |
 |-------|---------|
 | `test-runner` | Run tests + lint + audit + report |
+| `code-reviewer` | Review code for quality, bugs, and best practices |
+| `ci-analyzer` | Download CI artifacts, analyze failures, fix issues |
+| `ui-improver` | Analyze UI screenshots and improve widget code |
 
 ## Support
 

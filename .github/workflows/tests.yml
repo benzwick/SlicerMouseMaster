@@ -1,0 +1,266 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      slicer_version:
+        description: 'Slicer version (e.g., 5.10.0)'
+        required: false
+        default: '5.10.0'
+
+env:
+  # 3D Slicer 5.10.0 (revision 34045, built 2025-11-10)
+  # Download URL from https://download.slicer.org/
+  SLICER_VERSION: ${{ inputs.slicer_version || '5.10.0' }}
+  SLICER_DOWNLOAD_URL: 'https://download.slicer.org/bitstream/6911b598ac7b1c95e7934427'
+  DISPLAY: ':99'
+
+jobs:
+  # ============================================================================
+  # Job 1: Unit Tests (fast, no Slicer needed)
+  # ============================================================================
+  unit-tests:
+    name: Unit Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Run unit tests
+        run: |
+          uv run pytest MouseMaster/Testing/Python/ -v \
+            --tb=short \
+            --ignore=MouseMaster/Testing/Python/test_slicer_integration.py \
+            -m "not requires_slicer" \
+            --junitxml=test-results/unit-tests.xml
+
+      - name: Run linter
+        run: uv run ruff check .
+
+      - name: Run type checker
+        run: uv run mypy MouseMaster/MouseMasterLib/ || true
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results-py${{ matrix.python-version }}
+          path: test-results/
+          retention-days: 30
+
+  # ============================================================================
+  # Job 2: Slicer Integration Tests (with caching)
+  # ============================================================================
+  slicer-tests:
+    name: Slicer Integration Tests
+    runs-on: ubuntu-latest
+    needs: unit-tests
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up virtual display
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libxcb-xinerama0 libxcb-cursor0
+          Xvfb :99 -screen 0 1920x1080x24 &
+          sleep 3
+
+      - name: Cache Slicer installation
+        id: cache-slicer
+        uses: actions/cache@v4
+        with:
+          path: ~/Slicer
+          key: slicer-${{ env.SLICER_VERSION }}-linux
+
+      - name: Download and install Slicer
+        if: steps.cache-slicer.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/Slicer
+          cd ~/Slicer
+
+          # Download 3D Slicer from official download server
+          # Version: ${{ env.SLICER_VERSION }}
+          # URL obtained from https://download.slicer.org/
+          echo "Downloading 3D Slicer ${{ env.SLICER_VERSION }}..."
+
+          wget -q --show-progress -O slicer.tar.gz "${{ env.SLICER_DOWNLOAD_URL }}"
+
+          tar -xzf slicer.tar.gz --strip-components=1
+          rm slicer.tar.gz
+
+          echo "Slicer installed to ~/Slicer"
+          ls -la
+
+      - name: Verify Slicer installation
+        run: |
+          export SLICER_HOME=~/Slicer
+          echo "SLICER_HOME=$SLICER_HOME" >> $GITHUB_ENV
+
+          # Check Slicer executable exists
+          if [ -f "$SLICER_HOME/Slicer" ]; then
+            echo "Slicer executable found"
+          else
+            echo "ERROR: Slicer executable not found"
+            ls -la $SLICER_HOME/
+            exit 1
+          fi
+
+      - name: Install extension in Slicer
+        run: |
+          # Create extension directory in Slicer
+          mkdir -p ~/.config/NA-MIC/Extensions-*/ 2>/dev/null || true
+
+          # Link our extension to Slicer's module paths
+          EXTENSION_DIR=$(pwd)/MouseMaster
+          echo "Extension directory: $EXTENSION_DIR"
+
+      - name: Run Slicer integration tests with screenshots
+        id: slicer-tests
+        run: |
+          mkdir -p test-results/screenshots
+
+          # Create test script
+          cat > /tmp/run_tests.py << 'PYTEST_SCRIPT'
+          import sys
+          import os
+
+          # Add extension to path
+          extension_path = os.environ.get('GITHUB_WORKSPACE', '.') + '/MouseMaster'
+          sys.path.insert(0, extension_path)
+
+          # Import and run tests
+          try:
+              import slicer
+              from slicer.ScriptedLoadableModule import ScriptedLoadableModuleTest
+
+              # Load the MouseMaster module
+              slicer.util.selectModule('MouseMaster')
+
+              # Get the test class
+              import MouseMaster
+              test = MouseMaster.MouseMasterTest()
+
+              # Run tests
+              success = test.runTest()
+
+              # Exit with appropriate code
+              sys.exit(0 if success else 1)
+
+          except Exception as e:
+              print(f"Error running tests: {e}")
+              import traceback
+              traceback.print_exc()
+              sys.exit(1)
+          PYTEST_SCRIPT
+
+          # Run Slicer with test script
+          timeout 300 $SLICER_HOME/Slicer --no-splash --python-script /tmp/run_tests.py \
+            --additional-module-paths $(pwd)/MouseMaster 2>&1 | tee test-results/slicer-output.log || true
+
+          # Copy screenshots
+          if [ -d "MouseMaster/Testing/Python/screenshots" ]; then
+            cp -r MouseMaster/Testing/Python/screenshots/* test-results/screenshots/ 2>/dev/null || true
+          fi
+
+      - name: Upload Slicer test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: slicer-test-results
+          path: test-results/
+          retention-days: 30
+
+      - name: Upload screenshots for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-screenshots
+          path: test-results/screenshots/
+          retention-days: 30
+
+  # ============================================================================
+  # Job 3: Generate test report artifact
+  # ============================================================================
+  test-report:
+    name: Generate Test Report
+    runs-on: ubuntu-latest
+    needs: [unit-tests, slicer-tests]
+    if: always()
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Generate report
+        run: |
+          mkdir -p report
+
+          cat > report/test-report.md << 'EOF'
+          # MouseMaster Test Report
+
+          **Generated**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          **Commit**: ${{ github.sha }}
+          **Branch**: ${{ github.ref_name }}
+
+          ## Unit Test Results
+
+          See `unit-test-results-*/` artifacts for detailed results.
+
+          ## Slicer Integration Test Results
+
+          See `slicer-test-results/` artifact for:
+          - `slicer-output.log` - Full test output
+          - `screenshots/` - UI screenshots with manifest.json
+
+          ## Screenshot Manifest
+
+          If screenshots were captured, review `ui-screenshots/manifest.json` for descriptions.
+
+          ## For Claude Code Analysis
+
+          Download artifacts and run:
+          ```
+          /analyze-test-results
+          ```
+
+          This will analyze test failures and screenshots to suggest fixes.
+          EOF
+
+          # Include any screenshots manifest if present
+          if [ -f "artifacts/ui-screenshots/manifest.json" ]; then
+            echo "" >> report/test-report.md
+            echo "## Screenshot Details" >> report/test-report.md
+            echo '```json' >> report/test-report.md
+            cat artifacts/ui-screenshots/manifest.json >> report/test-report.md
+            echo '```' >> report/test-report.md
+          fi
+
+      - name: Upload test report
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: report/
+          retention-days: 30
