@@ -13,10 +13,9 @@ Or import and call functions individually:
     capture_main_ui('/path/to/Screenshots')
 """
 
-import os
 import logging
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -148,8 +147,8 @@ def ensure_mousemaster_visible() -> bool:
     Returns:
         True if successful
     """
-    import slicer
     import qt
+    import slicer
 
     try:
         # Switch to MouseMaster module
@@ -174,8 +173,8 @@ def setup_clean_ui(layout: str = "3d_only") -> None:
     Args:
         layout: Layout to use - "3d_only", "conventional", or "dual3d"
     """
-    import slicer
     import qt
+    import slicer
 
     main_window = slicer.util.mainWindow()
 
@@ -237,9 +236,9 @@ def configure_module_sections(
         expand: List of section name patterns to expand
         collapse: List of section name patterns to collapse
     """
-    import slicer
-    import qt
     import ctk
+    import qt
+    import slicer
 
     if expand is None:
         expand = ["Button Mappings", "Mouse Selection", "Preset Management"]
@@ -306,7 +305,6 @@ def capture_main_ui(output_dir: Path | str | None = None) -> Path | None:
     Returns:
         Path to saved screenshot, or None if failed
     """
-    import slicer
     import qt
 
     output_dir = Path(output_dir) if output_dir else get_screenshot_dir()
@@ -354,7 +352,6 @@ def capture_button_mapping(output_dir: Path | str | None = None) -> Path | None:
     Returns:
         Path to saved screenshot, or None if failed
     """
-    import slicer
     import qt
 
     output_dir = Path(output_dir) if output_dir else get_screenshot_dir()
@@ -394,7 +391,6 @@ def capture_preset_selector(output_dir: Path | str | None = None) -> Path | None
     Returns:
         Path to saved screenshot, or None if failed
     """
-    import slicer
     import qt
 
     output_dir = Path(output_dir) if output_dir else get_screenshot_dir()
