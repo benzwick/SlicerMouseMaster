@@ -104,7 +104,10 @@ jobs:
             libxdamage1 \
             libxrandr2 \
             libxtst6 \
-            libasound2t64
+            libasound2t64 \
+            libpulse-mainloop-glib0 \
+            libpulse0 \
+            libglib2.0-0
           Xvfb :99 -screen 0 1920x1080x24 &
           sleep 3
 
