@@ -197,6 +197,7 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         # Mouse selector combo box
         self.mouseSelector = qt.QComboBox()
+        self.mouseSelector.toolTip = "Select your mouse model for button mapping"
         self.mouseSelector.addItem("-- Select Mouse --", "")
         mouseLayout.addRow("Mouse Model:", self.mouseSelector)
 
@@ -213,6 +214,7 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         # Preset selector combo box
         self.presetSelector = qt.QComboBox()
+        self.presetSelector.toolTip = "Select a preset configuration for your mouse"
         self.presetSelector.addItem("-- Select Preset --", "")
         presetLayout.addRow("Preset:", self.presetSelector)
 
@@ -220,14 +222,15 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.enableButton = qt.QPushButton("Enable Mouse Master")
         self.enableButton.checkable = True
         self.enableButton.checked = False
+        self.enableButton.toolTip = "Select a mouse and preset first"
         presetLayout.addRow(self.enableButton)
 
         # Collapsible button for button mappings
-        mappingsCollapsible = ctk.ctkCollapsibleButton()
-        mappingsCollapsible.text = "Button Mappings"
-        mappingsCollapsible.collapsed = True
-        self.layout.addWidget(mappingsCollapsible)
-        mappingsLayout = qt.QVBoxLayout(mappingsCollapsible)
+        self.mappingsCollapsible = ctk.ctkCollapsibleButton()
+        self.mappingsCollapsible.text = "Button Mappings"
+        self.mappingsCollapsible.collapsed = True
+        self.layout.addWidget(self.mappingsCollapsible)
+        mappingsLayout = qt.QVBoxLayout(self.mappingsCollapsible)
 
         # Context-sensitive toggle
         self.contextToggle = qt.QCheckBox("Enable context-sensitive bindings")
@@ -259,6 +262,7 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.mappingTable.setSelectionBehavior(qt.QAbstractItemView.SelectRows)
         self.mappingTable.setEditTriggers(qt.QAbstractItemView.NoEditTriggers)
         self.mappingTable.setMinimumHeight(250)
+        self.mappingTable.setMinimumWidth(350)
         mappingsLayout.addWidget(self.mappingTable)
 
         # Connect signals
@@ -398,10 +402,14 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         if enabled:
             self._eventHandler.install()
             self.enableButton.text = "Disable Mouse Master"
+            self.enableButton.toolTip = "Click to disable mouse button remapping"
+            slicer.util.showStatusMessage("MouseMaster enabled", 2000)
             logging.info("MouseMaster enabled")
         else:
             self._eventHandler.uninstall()
             self.enableButton.text = "Enable Mouse Master"
+            self.enableButton.toolTip = "Click to enable mouse button remapping"
+            slicer.util.showStatusMessage("MouseMaster disabled", 2000)
             logging.info("MouseMaster disabled")
         if self._parameterNode:
             self._parameterNode.enabled = enabled
@@ -422,6 +430,9 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         if self._parameterNode:
             self._parameterNode.selectedPresetId = presetId if presetId else ""
         self._loadSelectedPreset()
+        # Auto-expand Button Mappings when a preset is selected
+        if presetId:
+            self.mappingsCollapsible.collapsed = False
 
     def _updatePresetSelector(self) -> None:
         """Update preset selector based on selected mouse."""
