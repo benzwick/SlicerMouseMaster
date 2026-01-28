@@ -39,6 +39,23 @@ test = MouseMaster.MouseMasterTest()
 test.runTest()
 ```
 
+## Living Documentation
+
+Documentation is generated from tests, not written statically:
+
+```bash
+# Run tutorial test to generate docs with current screenshots
+Slicer --python-script MouseMaster/Testing/Python/test_tutorial_workflow.py
+
+# Output: docs/user-guide/_generated/ (screenshots + tutorial.rst)
+```
+
+**Why?**
+- Screenshots always match current UI
+- Tutorials are verified working code
+- Documentation stays in sync with implementation
+- CI catches broken tutorials
+
 ## Key Paths
 
 | Path | Contents |

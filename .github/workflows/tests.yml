@@ -202,6 +202,26 @@ jobs:
           path: test-results/screenshots/
           retention-days: 30
 
+      - name: Run tutorial workflow test (generates docs)
+        run: |
+          mkdir -p docs/user-guide/_generated
+
+          timeout 300 $SLICER_HOME/Slicer --no-splash \
+            --python-script MouseMaster/Testing/Python/test_tutorial_workflow.py \
+            --additional-module-paths $(pwd)/MouseMaster \
+            2>&1 | tee test-results/tutorial-output.log
+
+          echo "=== Tutorial artifacts ==="
+          ls -la docs/user-guide/_generated/ || echo "No tutorial output"
+
+      - name: Upload tutorial artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tutorial-docs
+          path: docs/user-guide/_generated/
+          retention-days: 30
+
   # ============================================================================
   # Job 3: Generate test report artifact
   # ============================================================================
