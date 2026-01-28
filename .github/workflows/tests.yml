@@ -107,7 +107,10 @@ jobs:
             libasound2t64 \
             libpulse-mainloop-glib0 \
             libpulse0 \
-            libglib2.0-0
+            libglib2.0-0 \
+            libopengl0 \
+            libglx0 \
+            libgl1
           Xvfb :99 -screen 0 1920x1080x24 &
           sleep 3
 
