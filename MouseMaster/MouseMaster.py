@@ -518,9 +518,9 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             if index >= 0:
                 actionCombo.setCurrentIndex(index)
 
-            # Connect signal with button id
+            # Connect signal with button id and combo reference
             actionCombo.setProperty("buttonId", button.id)
-            actionCombo.connect("currentIndexChanged(int)", lambda idx, b=button.id: self._onActionChanged(b, idx))
+            actionCombo.connect("currentIndexChanged(int)", lambda idx, b=button.id, c=actionCombo: self._onActionChanged(b, idx, c))
             self.mappingTable.setCellWidget(row, 1, actionCombo)
 
             # Clear button
@@ -540,7 +540,7 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             for action in actions:
                 combo.addItem(f"{action.description}", action.id)
 
-    def _onActionChanged(self, button_id: str, index: int) -> None:
+    def _onActionChanged(self, button_id: str, index: int, combo=None) -> None:
         """Handle action selection change for a button."""
         presetId = self._parameterNode.selectedPresetId if self._parameterNode else ""
         if not presetId:
@@ -550,8 +550,7 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         if not preset:
             return
 
-        # Get the combo box that triggered this
-        combo = self.sender()
+        # Use the combo box passed as argument
         if not combo:
             return
 
