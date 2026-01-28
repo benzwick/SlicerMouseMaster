@@ -80,10 +80,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up virtual display
+      - name: Set up virtual display and dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y xvfb libxcb-xinerama0 libxcb-cursor0
+          sudo apt-get install -y \
+            xvfb \
+            libxcb-xinerama0 \
+            libxcb-cursor0 \
+            libxcb-icccm4 \
+            libxcb-image0 \
+            libxcb-keysyms1 \
+            libxcb-render-util0 \
+            libxcb-shape0 \
+            libxkbcommon-x11-0 \
+            libgl1-mesa-glx \
+            libegl1-mesa \
+            libxkbcommon0 \
+            libdbus-1-3 \
+            libfontconfig1 \
+            libfreetype6 \
+            libnss3 \
+            libxcomposite1 \
+            libxdamage1 \
+            libxrandr2 \
+            libxtst6 \
+            libasound2t64 || sudo apt-get install -y libasound2
           Xvfb :99 -screen 0 1920x1080x24 &
           sleep 3
 
@@ -141,48 +162,20 @@ jobs:
         run: |
           mkdir -p test-results/screenshots
 
-          # Create test script
-          cat > /tmp/run_tests.py << 'PYTEST_SCRIPT'
-          import sys
-          import os
+          # Run the test script from the repository
+          timeout 300 $SLICER_HOME/Slicer --no-splash \
+            --python-script MouseMaster/Testing/Python/run_slicer_tests.py \
+            --additional-module-paths $(pwd)/MouseMaster \
+            2>&1 | tee test-results/slicer-output.log
 
-          # Add extension to path
-          extension_path = os.environ.get('GITHUB_WORKSPACE', '.') + '/MouseMaster'
-          sys.path.insert(0, extension_path)
+          # Copy screenshots to test-results
+          cp -r test-results/screenshots/* test-results/screenshots/ 2>/dev/null || true
+          cp MouseMaster/Testing/Python/screenshots/* test-results/screenshots/ 2>/dev/null || true
 
-          # Import and run tests
-          try:
-              import slicer
-              from slicer.ScriptedLoadableModule import ScriptedLoadableModuleTest
-
-              # Load the MouseMaster module
-              slicer.util.selectModule('MouseMaster')
-
-              # Get the test class
-              import MouseMaster
-              test = MouseMaster.MouseMasterTest()
-
-              # Run tests
-              success = test.runTest()
-
-              # Exit with appropriate code
-              sys.exit(0 if success else 1)
-
-          except Exception as e:
-              print(f"Error running tests: {e}")
-              import traceback
-              traceback.print_exc()
-              sys.exit(1)
-          PYTEST_SCRIPT
-
-          # Run Slicer with test script
-          timeout 300 $SLICER_HOME/Slicer --no-splash --python-script /tmp/run_tests.py \
-            --additional-module-paths $(pwd)/MouseMaster 2>&1 | tee test-results/slicer-output.log || true
-
-          # Copy screenshots
-          if [ -d "MouseMaster/Testing/Python/screenshots" ]; then
-            cp -r MouseMaster/Testing/Python/screenshots/* test-results/screenshots/ 2>/dev/null || true
-          fi
+          # Show what was captured
+          echo "=== Screenshots captured ==="
+          ls -la test-results/screenshots/ || echo "No screenshots"
+          cat test-results/screenshots/manifest.json 2>/dev/null || echo "No manifest"
 
       - name: Upload Slicer test results
         if: always()
