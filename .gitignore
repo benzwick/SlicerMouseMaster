@@ -39,3 +39,6 @@ dist/
 
 # Documentation build
 docs/_build/
+
+# CI artifacts
+ci-artifacts/
