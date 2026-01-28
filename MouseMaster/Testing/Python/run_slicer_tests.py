@@ -179,12 +179,12 @@ def run_tests():
         results['failed'] += 1
         results['errors'].append(str(e))
 
-        # Capture error state
+        # Capture error state screenshot
         try:
             capture.capture_layout(f"Error state: {e}")
             capture.save_manifest()
-        except:
-            pass
+        except Exception as capture_error:
+            print(f"Failed to capture error screenshot: {capture_error}")
 
     # Print summary
     print("\n" + "=" * 60)
