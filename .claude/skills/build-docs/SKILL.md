@@ -1,5 +1,5 @@
 ---
-name: Build Docs
+name: build-docs
 description: Generate reference docs, build Sphinx documentation, and review all screenshots
 allowed-tools:
   - Bash
