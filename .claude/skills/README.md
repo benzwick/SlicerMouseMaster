@@ -43,6 +43,7 @@ except SomeError:
 | Skill | Purpose |
 |-------|---------|
 | `/add-mouse-profile` | Create support for a new mouse model |
+| `/build-docs` | Generate reference docs, build Sphinx docs, review screenshots |
 | `/detect-buttons` | Discover Qt button codes for unknown mice |
 | `/test-bindings` | Debug and verify button bindings |
 | `/export-preset` | Export preset configurations |
@@ -67,6 +68,19 @@ except SomeError:
 1. /detect-buttons           # Discover button codes
 2. /add-mouse-profile        # Create profile JSON
 3. /test-bindings            # Verify bindings work
+```
+
+### Documentation
+
+```
+/build-docs                  # Generate refs, build docs, review screenshots
+```
+
+Or step by step:
+```
+1. /generate-screenshots             # Capture UI screenshots
+2. /review-ui-screenshots            # Check for issues
+3. /build-docs                       # Build full documentation
 ```
 
 ### Extension Index Submission
