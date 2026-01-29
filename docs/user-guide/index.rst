@@ -15,12 +15,8 @@ New to MouseMaster? Start here:
 
 1. :doc:`installation` - Install the extension
 2. :doc:`quick-start` - Get up and running in 5 minutes
-3. :doc:`button-mapping` - Configure your mouse buttons
-
-.. note::
-
-   A hands-on :doc:`tutorial` with screenshots is auto-generated during CI.
-   To generate locally: ``Slicer --python-script MouseMaster/Testing/Python/test_tutorial_workflow.py``
+3. :doc:`tutorial` - **Hands-on tutorial** with screenshots
+4. :doc:`button-mapping` - Configure your mouse buttons
 
 Advanced Topics
 ---------------

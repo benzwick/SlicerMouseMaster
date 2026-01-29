@@ -21,9 +21,9 @@ Quick Links
 -----------
 
 - :doc:`user-guide/quick-start` - Get started in 5 minutes
+- :doc:`user-guide/tutorial` - Hands-on segmentation workflow with screenshots
 - :doc:`user-guide/button-mapping` - Configure your mouse buttons
 - :doc:`user-guide/presets` - Save and share configurations
-- :doc:`developer-guide/index` - Extend MouseMaster
 
 .. toctree::
    :maxdepth: 1
@@ -33,6 +33,7 @@ Quick Links
    user-guide/index
    user-guide/installation
    user-guide/quick-start
+   user-guide/tutorial
    user-guide/button-mapping
    user-guide/presets
    user-guide/context-bindings

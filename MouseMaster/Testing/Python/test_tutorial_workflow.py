@@ -260,11 +260,6 @@ def generate_tutorial_rst(results: dict, output_dir: Path) -> None:
         "This hands-on tutorial walks through a complete segmentation workflow",
         "using MouseMaster to streamline your mouse button mappings.",
         "",
-        ".. note::",
-        "",
-        f"   Auto-generated from test run on {results['timestamp'][:10]}.",
-        "   Screenshots reflect the current UI and are updated with each release.",
-        "",
         "Prerequisites",
         "-------------",
         "",
@@ -349,6 +344,11 @@ def generate_tutorial_rst(results: dict, output_dir: Path) -> None:
             "- Use **Back/Forward** buttons for Undo/Redo in any module",
             "- Create module-specific bindings for Segment Editor effects",
             "- Export your presets to share with colleagues",
+            "",
+            "----",
+            "",
+            f"*This tutorial was auto-generated on {results['timestamp'][:10]}.*",
+            "*Screenshots reflect the current UI.*",
             "",
         ]
     )
