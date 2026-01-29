@@ -191,9 +191,6 @@ def generate_mouse_profiles_rst(definitions: list[dict]) -> str:
             "2. Save the detected profile for future use",
             "3. Consider contributing your profile to the project",
             "",
-            "See :doc:`/developer-guide/adding-mouse-profiles` for details on creating",
-            "and contributing mouse profiles.",
-            "",
         ]
     )
 
