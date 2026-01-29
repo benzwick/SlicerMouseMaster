@@ -143,10 +143,14 @@ def run_tutorial() -> dict:
             button_item = table.item(row, 0)
             action_widget = table.cellWidget(row, 1)
             if button_item and action_widget:
-                mappings.append({
-                    "button": button_item.text(),
-                    "action": action_widget.currentText if hasattr(action_widget, 'currentText') else str(action_widget),
-                })
+                mappings.append(
+                    {
+                        "button": button_item.text(),
+                        "action": action_widget.currentText
+                        if hasattr(action_widget, "currentText")
+                        else str(action_widget),
+                    }
+                )
         results["steps"][-1]["data"] = {"mappings": mappings}
 
         # Step 6: Enable MouseMaster
@@ -207,6 +211,7 @@ def run_tutorial() -> dict:
         traceback.print_exc()
 
         import contextlib
+
         with contextlib.suppress(Exception):
             capture.capture_layout(f"error_{len(results['errors'])}")
 
@@ -235,38 +240,118 @@ def generate_tutorial_rst(results: dict, output_dir: Path) -> None:
     """Generate RST documentation from test results."""
     rst_file = output_dir.parent / "tutorial.rst"
 
+    # Map step indices to screenshot filenames based on manifest
+    manifest_file = output_dir / "manifest.json"
+    screenshot_map = {}
+    if manifest_file.exists():
+        with open(manifest_file) as f:
+            manifest = json.load(f)
+            for s in manifest.get("screenshots", []):
+                # Extract step number from description like "02_mrhead_loaded"
+                desc = s.get("description", "")
+                if desc and desc[0:2].isdigit():
+                    step_num = int(desc[0:2])
+                    screenshot_map[step_num] = s["filename"]
+
     lines = [
         "Tutorial: Segmentation Workflow",
-        "=" * 31,
+        "================================",
+        "",
+        "This hands-on tutorial walks through a complete segmentation workflow",
+        "using MouseMaster to streamline your mouse button mappings.",
         "",
         ".. note::",
         "",
-        f"   This tutorial was auto-generated from test run on {results['timestamp'][:10]}.",
-        "   Screenshots reflect the actual current UI.",
+        f"   Auto-generated from test run on {results['timestamp'][:10]}.",
+        "   Screenshots reflect the current UI and are updated with each release.",
+        "",
+        "Prerequisites",
+        "-------------",
+        "",
+        "- 3D Slicer installed with MouseMaster extension",
+        "- A multi-button mouse (or use Generic 3-Button profile)",
         "",
     ]
 
-    for i, step in enumerate(results["steps"], 1):
-        lines.append(f"Step {i}: {step['name']}")
-        lines.append("-" * (len(f"Step {i}: {step['name']}")))
+    # Screenshot number tracking based on captured files
+    screenshot_num = 1
+
+    for i, step_data in enumerate(results["steps"], 1):
+        step_name = step_data["name"]
+        lines.append(f"Step {i}: {step_name}")
+        lines.append("-" * (len(f"Step {i}: {step_name}")))
         lines.append("")
-        lines.append(step["description"])
+        lines.append(step_data["description"])
         lines.append("")
 
-        # Add screenshot if exists
-        lines.append(f".. image:: _generated/{i:02d}*.png")
-        lines.append("   :width: 100%")
-        lines.append("")
+        # Find matching screenshot(s) for this step
+        # Screenshots are numbered sequentially, multiple per step possible
+        step_screenshots = []
+        for num, filename in screenshot_map.items():
+            # Match screenshots that start with step number pattern
+            if num == screenshot_num or (num > screenshot_num and num <= screenshot_num + 2):
+                step_screenshots.append(filename)
 
-        # Add data if present
-        if "data" in step and "mappings" in step["data"]:
-            lines.append("Current mappings:")
+        if step_screenshots:
+            # Use the last screenshot for this step (most complete state)
+            screenshot = step_screenshots[-1]
+            lines.append(f".. figure:: _generated/{screenshot}")
+            lines.append("   :width: 100%")
+            lines.append(f"   :alt: {step_name}")
             lines.append("")
-            for m in step["data"]["mappings"]:
-                lines.append(f"- **{m['button']}**: {m['action']}")
-            lines.append("")
+            screenshot_num = int(screenshot[:3]) + 1
+
+        # Add contextual data if present
+        if "data" in step_data:
+            data = step_data["data"]
+
+            if "volume" in data:
+                lines.append(f"*Loaded volume: {data['volume']}*")
+                lines.append("")
+
+            if "mouse" in data:
+                lines.append(f"*Selected mouse: {data['mouse']}*")
+                lines.append("")
+
+            if "preset" in data:
+                lines.append(f"*Applied preset: {data['preset']}*")
+                lines.append("")
+
+            if data.get("mappings"):
+                lines.append("**Current button mappings:**")
+                lines.append("")
+                for m in data["mappings"]:
+                    lines.append(f"- **{m['button']}** → {m['action']}")
+                lines.append("")
+
+            if "enabled" in data:
+                status = "active" if data["enabled"] else "inactive"
+                lines.append(f"*MouseMaster status: {status}*")
+                lines.append("")
 
         lines.append("")
+
+    # Add next steps section
+    lines.extend(
+        [
+            "What's Next?",
+            "------------",
+            "",
+            "Now that you've completed the basic workflow:",
+            "",
+            "- :doc:`button-mapping` - Customize your button assignments",
+            "- :doc:`presets` - Save and share your configurations",
+            "- :doc:`context-bindings` - Create module-specific mappings",
+            "",
+            "Tips",
+            "----",
+            "",
+            "- Use **Back/Forward** buttons for Undo/Redo in any module",
+            "- Create module-specific bindings for Segment Editor effects",
+            "- Export your presets to share with colleagues",
+            "",
+        ]
+    )
 
     with open(rst_file, "w") as f:
         f.write("\n".join(lines))

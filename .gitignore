@@ -40,5 +40,9 @@ dist/
 # Documentation build
 docs/_build/
 
+# Generated documentation (from test_tutorial_workflow.py)
+docs/user-guide/_generated/
+docs/user-guide/tutorial.rst
+
 # CI artifacts
 ci-artifacts/
