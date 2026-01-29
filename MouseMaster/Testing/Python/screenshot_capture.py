@@ -106,9 +106,25 @@ class ScreenshotCapture:
             return self.base_folder
         return self.base_folder / self._current_group
 
-    def _next_filename(self) -> str:
-        """Generate next auto-numbered filename."""
+    def _next_filename(self, description: str = "") -> str:
+        """Generate next auto-numbered filename with description.
+
+        Args:
+            description: Description to include in filename (sanitized)
+
+        Returns:
+            Filename like "001_step1_data_loaded.png"
+        """
         self._counter += 1
+        # Sanitize description for filename: lowercase, replace spaces/special chars with underscore
+        if description:
+            safe_desc = description.lower()
+            safe_desc = "".join(c if c.isalnum() else "_" for c in safe_desc)
+            safe_desc = "_".join(
+                part for part in safe_desc.split("_") if part
+            )  # Remove empty parts
+            safe_desc = safe_desc[:50]  # Limit length
+            return f"{self._counter:03d}_{safe_desc}.png"
         if self.flat_mode:
             return f"{self._counter:03d}.png"
         return f"{self._current_group}_{self._counter:03d}.png"
@@ -137,7 +153,7 @@ class ScreenshotCapture:
         import slicer
 
         output_dir = self._ensure_output_dir()
-        filename = self._next_filename()
+        filename = self._next_filename(description)
         filepath = output_dir / filename
 
         # Capture the layout
@@ -179,7 +195,8 @@ class ScreenshotCapture:
         import slicer
 
         output_dir = self._ensure_output_dir()
-        filename = self._next_filename()
+        full_description = f"{view_name}_{description}"
+        filename = self._next_filename(full_description)
         filepath = output_dir / filename
 
         layout_manager = slicer.app.layoutManager()
@@ -221,7 +238,8 @@ class ScreenshotCapture:
         import slicer
 
         output_dir = self._ensure_output_dir()
-        filename = self._next_filename()
+        full_description = f"3d_{view_index}_{description}"
+        filename = self._next_filename(full_description)
         filepath = output_dir / filename
 
         layout_manager = slicer.app.layoutManager()
@@ -264,7 +282,7 @@ class ScreenshotCapture:
             return None
 
         output_dir = self._ensure_output_dir()
-        filename = self._next_filename()
+        filename = self._next_filename(description)
         filepath = output_dir / filename
 
         # Capture the widget
