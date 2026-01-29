@@ -132,6 +132,8 @@ def run_tutorial() -> dict:
             "Review Button Mappings",
             "Expand Button Mappings to see current configuration.",
         )
+        # Expand the Button Mappings section
+        widget.mappingsCollapsible.collapsed = False
         slicer.app.processEvents()
         capture_step("step5_button_mappings")
 
