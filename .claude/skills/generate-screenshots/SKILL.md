@@ -1,5 +1,5 @@
 ---
-name: Generate Screenshots
+name: generate-screenshots
 description: Generate screenshots for Extension Index submission and documentation
 allowed-tools:
   - Bash

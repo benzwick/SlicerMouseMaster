@@ -1,5 +1,5 @@
 ---
-name: Download CI Artifacts
+name: download-ci-artifacts
 description: Download test results, screenshots, and logs from GitHub Actions
 allowed-tools:
   - Bash

@@ -1,5 +1,5 @@
 ---
-name: Extension Submission Checklist
+name: extension-submission-checklist
 description: Review and track progress against official 3D Slicer Extension Index requirements
 allowed-tools:
   - WebFetch

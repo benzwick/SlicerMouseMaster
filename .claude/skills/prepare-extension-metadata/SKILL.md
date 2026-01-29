@@ -1,5 +1,5 @@
 ---
-name: Prepare Extension Metadata
+name: prepare-extension-metadata
 description: Prepare and generate all required metadata files for Extension Index submission
 allowed-tools:
   - WebFetch

@@ -1,5 +1,5 @@
 ---
-name: Review UI Screenshots
+name: review-ui-screenshots
 description: Analyze UI screenshots to identify issues and suggest improvements
 allowed-tools:
   - Bash

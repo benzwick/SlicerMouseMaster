@@ -1,5 +1,5 @@
 ---
-name: Export Preset
+name: export-preset
 description: Help user export a preset configuration for sharing or backup
 allowed-tools:
   - Read

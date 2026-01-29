@@ -1,5 +1,5 @@
 ---
-name: Test Bindings
+name: test-bindings
 description: Interactively test mouse button bindings in Slicer
 allowed-tools:
   - Read

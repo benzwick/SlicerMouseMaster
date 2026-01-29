@@ -1,5 +1,5 @@
 ---
-name: Submit to Extension Index
+name: submit-to-extension-index
 description: Complete workflow for submitting an extension to the 3D Slicer Extension Index
 allowed-tools:
   - Bash

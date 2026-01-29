@@ -1,5 +1,5 @@
 ---
-name: Detect Buttons
+name: detect-buttons
 description: Guide user through button detection for an unknown mouse using Slicer Python console
 allowed-tools:
   - Read

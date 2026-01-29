@@ -1,5 +1,5 @@
 ---
-name: Add Mouse Profile
+name: add-mouse-profile
 description: Create a new mouse profile for a mouse model not yet supported
 allowed-tools:
   - Read

@@ -1,5 +1,5 @@
 ---
-name: Analyze Test Results
+name: analyze-test-results
 description: Analyze test failures and CI artifacts to identify and fix bugs
 allowed-tools:
   - Bash

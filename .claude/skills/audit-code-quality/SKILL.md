@@ -1,5 +1,5 @@
 ---
-name: Audit Code Quality
+name: audit-code-quality
 description: Scan codebase for bad coding practices that violate fail-fast principles
 allowed-tools:
   - Bash

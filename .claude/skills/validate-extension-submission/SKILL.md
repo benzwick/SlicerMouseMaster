@@ -1,5 +1,5 @@
 ---
-name: Validate Extension Submission
+name: validate-extension-submission
 description: Validate that an extension meets all requirements for Extension Index submission
 allowed-tools:
   - Bash

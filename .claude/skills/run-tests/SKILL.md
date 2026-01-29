@@ -1,5 +1,5 @@
 ---
-name: Run Tests
+name: run-tests
 description: Run the full test suite with linting, type checking, and code quality audit
 allowed-tools:
   - Bash

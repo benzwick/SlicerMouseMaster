@@ -1,5 +1,5 @@
 ---
-name: Autonomous Code Review
+name: autonomous-code-review
 description: Run comprehensive code quality checks, tests, and fixes autonomously
 allowed-tools:
   - Bash

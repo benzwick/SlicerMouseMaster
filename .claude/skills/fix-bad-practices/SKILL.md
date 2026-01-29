@@ -1,5 +1,5 @@
 ---
-name: Fix Bad Practices
+name: fix-bad-practices
 description: Fix bad coding practices identified by audit, following fail-fast principles
 allowed-tools:
   - Read
