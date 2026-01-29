@@ -68,14 +68,9 @@ def run_tutorial() -> dict:
         print(f"\n=== Step: {name} ===")
         print(description)
 
-    def capture_step(description: str, highlights: list | None = None) -> str | None:
-        """Capture screenshot for current step and store filename.
-
-        Args:
-            description: Description for the screenshot filename
-            highlights: Optional list of widgets to highlight with red rectangles
-        """
-        info = capture.capture_layout(description, highlights=highlights)
+    def capture_step(description: str) -> str | None:
+        """Capture screenshot for current step and store filename."""
+        info = capture.capture_layout(description)
         if info:
             results["steps"][-1]["screenshot"] = info.filename
             return info.filename
@@ -200,7 +195,7 @@ def run_tutorial() -> dict:
         slicer.app.processEvents()
 
         # Highlight the mouse selector dropdown
-        capture_step("step3_mouse_selected", highlights=[widget.mouseSelector])
+        capture_step("step3_mouse_selected")
         results["steps"][-1]["data"] = {"mouse": widget.mouseSelector.currentText}
 
         # ===========================================
@@ -217,7 +212,7 @@ def run_tutorial() -> dict:
         slicer.app.processEvents()
 
         # Highlight the preset selector dropdown
-        capture_step("step4_preset_selected", highlights=[widget.presetSelector])
+        capture_step("step4_preset_selected")
         results["steps"][-1]["data"] = {"preset": widget.presetSelector.currentText}
 
         # ===========================================
@@ -252,7 +247,7 @@ def run_tutorial() -> dict:
         slicer.app.processEvents()
 
         # Highlight the mapping table
-        capture_step("step5_button_mappings", highlights=[widget.mappingTable])
+        capture_step("step5_button_mappings")
 
         # ===========================================
         # STEP 6: Enable MouseMaster
@@ -267,7 +262,7 @@ def run_tutorial() -> dict:
             slicer.app.processEvents()
 
         # Highlight the enable button
-        capture_step("step6_enabled", highlights=[widget.enableButton])
+        capture_step("step6_enabled")
         results["steps"][-1]["data"] = {"enabled": widget.enableButton.checked}
 
         # ===========================================
