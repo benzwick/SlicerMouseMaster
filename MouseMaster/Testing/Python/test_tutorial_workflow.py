@@ -77,12 +77,16 @@ def run_tutorial() -> dict:
         return None
 
     try:
-        # Resize window to ensure module panel fits properly
+        # ===========================================
+        # SETUP: Resize window for better screenshots
+        # ===========================================
         main_window = slicer.util.mainWindow()
-        main_window.resize(1600, 1000)
+        main_window.resize(1920, 1080)
         slicer.app.processEvents()
 
-        # Step 1: Load Sample Data
+        # ===========================================
+        # STEP 1: Load Sample Data
+        # ===========================================
         step(
             "Load Sample Data",
             "Load MRHead from Sample Data module for segmentation practice.",
@@ -92,24 +96,33 @@ def run_tutorial() -> dict:
         volume_node = SampleData.SampleDataLogic().downloadMRHead()
         slicer.app.processEvents()
 
-        # Switch to conventional layout and set up proper views
+        # Switch to conventional layout (not Sample Data module view)
         slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutConventionalView)
+
+        # Reset slice views to show the volume properly
         slicer.util.resetSliceViews()
 
-        # Enable volume rendering in 3D view for better visualization
+        # Enable volume rendering so 3D view shows something useful
         volRenLogic = slicer.modules.volumerendering.logic()
         displayNode = volRenLogic.CreateDefaultVolumeRenderingNodes(volume_node)
         displayNode.SetVisibility(True)
 
-        # Reset 3D view to show the volume
+        # Reset 3D view camera to frame the volume
         threeDWidget = slicer.app.layoutManager().threeDWidget(0)
         threeDWidget.threeDView().resetFocalPoint()
+        threeDWidget.threeDView().resetCamera()
+        slicer.app.processEvents()
+
+        # Select the Volumes module to show clean data view (not Sample Data browser)
+        slicer.util.selectModule("Volumes")
         slicer.app.processEvents()
 
         capture_step("step1_data_loaded")
         results["steps"][-1]["data"] = {"volume": volume_node.GetName()}
 
-        # Step 2: Open MouseMaster
+        # ===========================================
+        # STEP 2: Open MouseMaster
+        # ===========================================
         step(
             "Open MouseMaster",
             "Navigate to Modules > Utilities > MouseMaster.",
@@ -117,34 +130,56 @@ def run_tutorial() -> dict:
         slicer.util.selectModule("MouseMaster")
         slicer.app.processEvents()
 
-        # Get widget and expand Button Mappings right away so changes are visible
+        # Get widget reference
         widget = slicer.modules.mousemaster.widgetRepresentation().self()
-        widget.mappingsCollapsible.collapsed = False
+
+        # Keep Button Mappings collapsed initially to show the module overview
+        widget.mappingsCollapsible.collapsed = True
         slicer.app.processEvents()
 
         capture_step("step2_mousemaster")
 
-        # Step 3: Select Mouse
+        # ===========================================
+        # STEP 3: Select Mouse (MX Master 3S)
+        # ===========================================
         step(
             "Select Mouse",
             "Choose your mouse model from the dropdown. We'll use the Logitech MX Master 3S.",
         )
 
-        # Select MX Master 3S - this will change the visible mappings
+        # Select MX Master 3S - this has 4 remappable buttons
+        mouse_found = False
         for i in range(widget.mouseSelector.count):
             if "MX Master 3S" in widget.mouseSelector.itemText(i):
                 widget.mouseSelector.setCurrentIndex(i)
+                mouse_found = True
                 break
+
+        # Fallback to Generic 5-Button if MX Master 3S not available
+        if not mouse_found:
+            for i in range(widget.mouseSelector.count):
+                if "Generic 5-Button" in widget.mouseSelector.itemText(i):
+                    widget.mouseSelector.setCurrentIndex(i)
+                    break
+
+        slicer.app.processEvents()
+
+        # Now expand Button Mappings to show the change from step 2
+        widget.mappingsCollapsible.collapsed = False
         slicer.app.processEvents()
 
         capture_step("step3_mouse_selected")
         results["steps"][-1]["data"] = {"mouse": widget.mouseSelector.currentText}
 
-        # Step 4: Select Preset
+        # ===========================================
+        # STEP 4: Select Preset
+        # ===========================================
         step(
             "Select Preset",
             "Choose a preset configuration for your workflow.",
         )
+
+        # Select first available preset (index 1, after "-- Select Preset --")
         if widget.presetSelector.count > 1:
             widget.presetSelector.setCurrentIndex(1)
         slicer.app.processEvents()
@@ -152,13 +187,15 @@ def run_tutorial() -> dict:
         capture_step("step4_preset_selected")
         results["steps"][-1]["data"] = {"preset": widget.presetSelector.currentText}
 
-        # Step 5: Review Button Mappings
+        # ===========================================
+        # STEP 5: Review Button Mappings
+        # ===========================================
         step(
             "Review Button Mappings",
-            "Review the button mappings for your mouse. MX Master 3S has 4 remappable buttons.",
+            "Review the button mappings for your mouse. The MX Master 3S has 4 remappable buttons.",
         )
 
-        # Collect mapping data
+        # Collect mapping data from the table
         mappings = []
         table = widget.mappingTable
         row_count = table.rowCount
@@ -168,24 +205,29 @@ def run_tutorial() -> dict:
             button_item = table.item(row, 0)
             action_widget = table.cellWidget(row, 1)
             if button_item and action_widget:
-                mappings.append(
-                    {
-                        "button": button_item.text(),
-                        "action": action_widget.currentText
-                        if hasattr(action_widget, "currentText")
-                        else str(action_widget),
-                    }
+                action_text = (
+                    action_widget.currentText
+                    if hasattr(action_widget, "currentText")
+                    else str(action_widget)
                 )
+                mappings.append({"button": button_item.text(), "action": action_text})
+
         results["steps"][-1]["data"] = {"mappings": mappings}
 
-        # Scroll to show all mappings clearly
+        # Scroll the module panel to ensure mappings are visible
+        # (already expanded from step 3)
+        slicer.app.processEvents()
+
         capture_step("step5_button_mappings")
 
-        # Step 6: Enable MouseMaster
+        # ===========================================
+        # STEP 6: Enable MouseMaster
+        # ===========================================
         step(
             "Enable MouseMaster",
             "Click Enable Mouse Master to activate button remapping.",
         )
+
         if widget.enableButton.enabled:
             widget.enableButton.setChecked(True)
             slicer.app.processEvents()
@@ -193,53 +235,90 @@ def run_tutorial() -> dict:
         capture_step("step6_enabled")
         results["steps"][-1]["data"] = {"enabled": widget.enableButton.checked}
 
-        # Step 7: Open Segment Editor
+        # ===========================================
+        # STEP 7: Open Segment Editor and Create Segment
+        # ===========================================
         step(
             "Open Segment Editor",
-            "Go to Segment Editor to test mappings with segmentation workflow.",
+            "Open Segment Editor and create a segment to start painting.",
         )
+
         slicer.util.selectModule("SegmentEditor")
         slicer.app.processEvents()
 
+        # Create segmentation node
         segmentation_node = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLSegmentationNode")
         segmentation_node.CreateDefaultDisplayNodes()
         segmentation_node.SetReferenceImageGeometryParameterFromVolumeNode(volume_node)
 
-        segment_editor = slicer.modules.segmenteditor.widgetRepresentation().self()
-        segment_editor.editor.setSegmentationNode(segmentation_node)
-        segment_editor.editor.setSourceVolumeNode(volume_node)
+        # Set up segment editor
+        segment_editor_widget = slicer.modules.segmenteditor.widgetRepresentation().self()
+        segment_editor_widget.editor.setSegmentationNode(segmentation_node)
+        segment_editor_widget.editor.setSourceVolumeNode(volume_node)
         slicer.app.processEvents()
 
-        # Add a segment
+        # Add a segment with a visible color
         segmentation_node.GetSegmentation().AddEmptySegment("Brain")
+        slicer.app.processEvents()
+
+        # Select Paint effect - this makes step 7 different from step 8
+        segment_editor_widget.editor.setActiveEffectByName("Paint")
         slicer.app.processEvents()
 
         capture_step("step7_segment_editor")
 
-        # Step 8: Test Your Mappings - show actual painting
+        # ===========================================
+        # STEP 8: Paint and Test Undo
+        # ===========================================
         step(
             "Test Your Mappings",
-            "Use Paint tool to draw, then test Back button for Undo.",
+            "Paint on the slice, then press Back button to Undo. Press Forward to Redo.",
         )
 
-        # Select Paint effect and do some painting to show workflow
-        segment_editor.editor.setActiveEffectByName("Paint")
-        effect = segment_editor.editor.activeEffect()
+        # Actually paint something so we can demonstrate undo
+        # Get the Paint effect and configure it
+        effect = segment_editor_widget.editor.activeEffect()
         if effect:
-            # Set a reasonable brush size
-            effect.setParameter("BrushSphere", 0)
-            effect.setParameter("BrushDiameterMm", 10)
-
-        # Select the segment so Paint tool is ready to use
-        segment_id = segmentation_node.GetSegmentation().GetSegmentIdBySegmentName("Brain")
-        if segment_id:
-            # Get the segment's labelmap
-            segment_editor.editor.setCurrentSegmentID(segment_id)
+            effect.setParameter("BrushSphere", "0")
+            effect.setParameter("BrushDiameterMm", "15")
             slicer.app.processEvents()
+
+        # Paint programmatically by using the effect's paint method
+        # We'll paint at the center of the red slice view
+        red_slice_widget = slicer.app.layoutManager().sliceWidget("Red")
+        red_slice_node = red_slice_widget.mrmlSliceNode()
+
+        # Get the center of the slice in RAS coordinates
+        sliceToRAS = red_slice_node.GetSliceToRAS()
+        center_ras = [
+            sliceToRAS.GetElement(0, 3),
+            sliceToRAS.GetElement(1, 3),
+            sliceToRAS.GetElement(2, 3),
+        ]
+
+        # Use the segment editor effect to paint
+        if effect:
+            # Paint at a few positions to create visible stroke
+
+            for offset in [0, 5, 10, 15, 20]:
+                point_ras = [center_ras[0] + offset, center_ras[1], center_ras[2]]
+                effect.self().paintApply(point_ras)
+
+            slicer.app.processEvents()
+
+        # Show 3D representation of segmentation
+        segmentation_node.CreateClosedSurfaceRepresentation()
+        slicer.app.processEvents()
+
+        # Reset 3D view to show both volume and segmentation
+        threeDWidget.threeDView().resetFocalPoint()
+        slicer.app.processEvents()
 
         capture_step("step8_paint_test")
 
-        # Disable MouseMaster for cleanup
+        # ===========================================
+        # CLEANUP
+        # ===========================================
         slicer.util.selectModule("MouseMaster")
         widget = slicer.modules.mousemaster.widgetRepresentation().self()
         widget.enableButton.setChecked(False)
