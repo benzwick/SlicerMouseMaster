@@ -58,16 +58,23 @@ def run_tutorial() -> dict:
     results = {
         "timestamp": datetime.now().isoformat(),
         "steps": [],
-        "screenshots": [],
         "success": True,
         "errors": [],
     }
 
     def step(name: str, description: str):
         """Record a tutorial step."""
-        results["steps"].append({"name": name, "description": description})
+        results["steps"].append({"name": name, "description": description, "screenshot": None})
         print(f"\n=== Step: {name} ===")
         print(description)
+
+    def capture_step(description: str) -> str | None:
+        """Capture screenshot for current step and store filename."""
+        info = capture.capture_layout(description)
+        if info:
+            results["steps"][-1]["screenshot"] = info.filename
+            return info.filename
+        return None
 
     try:
         # Step 1: Load Sample Data
@@ -77,13 +84,12 @@ def run_tutorial() -> dict:
         )
         slicer.util.selectModule("SampleData")
         slicer.app.processEvents()
-        capture.capture_layout("01_sample_data_module")
 
         import SampleData
 
         volume_node = SampleData.SampleDataLogic().downloadMRHead()
         slicer.app.processEvents()
-        capture.capture_layout("02_mrhead_loaded")
+        capture_step("step1_data_loaded")
         results["steps"][-1]["data"] = {"volume": volume_node.GetName()}
 
         # Step 2: Open MouseMaster
@@ -93,8 +99,7 @@ def run_tutorial() -> dict:
         )
         slicer.util.selectModule("MouseMaster")
         slicer.app.processEvents()
-        capture.capture_layout("03_mousemaster_module")
-        capture.capture_module_widget("04_mousemaster_panel")
+        capture_step("step2_mousemaster")
 
         # Step 3: Select Mouse
         step(
@@ -103,13 +108,12 @@ def run_tutorial() -> dict:
         )
         widget = slicer.modules.mousemaster.widgetRepresentation().self()
 
-        # Select a mouse (Generic 3-Button for tutorial)
         for i in range(widget.mouseSelector.count):
             if "Generic 3-Button" in widget.mouseSelector.itemText(i):
                 widget.mouseSelector.setCurrentIndex(i)
                 break
         slicer.app.processEvents()
-        capture.capture_layout("05_mouse_selected")
+        capture_step("step3_mouse_selected")
         results["steps"][-1]["data"] = {"mouse": widget.mouseSelector.currentText}
 
         # Step 4: Select Preset
@@ -117,11 +121,10 @@ def run_tutorial() -> dict:
             "Select Preset",
             "Choose a preset configuration for your workflow.",
         )
-        # Select first available preset
         if widget.presetSelector.count > 1:
             widget.presetSelector.setCurrentIndex(1)
         slicer.app.processEvents()
-        capture.capture_layout("06_preset_selected")
+        capture_step("step4_preset_selected")
         results["steps"][-1]["data"] = {"preset": widget.presetSelector.currentText}
 
         # Step 5: Review Button Mappings
@@ -129,16 +132,9 @@ def run_tutorial() -> dict:
             "Review Button Mappings",
             "Expand Button Mappings to see current configuration.",
         )
-        # Mappings should auto-expand when preset selected
         slicer.app.processEvents()
+        capture_step("step5_button_mappings")
 
-        # Capture full layout showing mapping table with context
-        capture.capture_layout("07_button_mappings")
-
-        # Also capture just the module widget for detail view
-        capture.capture_module_widget("08_button_mappings_detail")
-
-        # Capture mapping table info
         mappings = []
         table = widget.mappingTable
         row_count = table.rowCount
@@ -163,16 +159,10 @@ def run_tutorial() -> dict:
             "Enable MouseMaster",
             "Click Enable Mouse Master to activate button remapping.",
         )
-        # Capture before enabling
-        capture.capture_module_widget("09_before_enable")
-
         if widget.enableButton.enabled:
             widget.enableButton.setChecked(True)
             slicer.app.processEvents()
-
-        # Capture after enabling - full layout shows active status
-        capture.capture_layout("10_enabled")
-        capture.capture_module_widget("11_enabled_detail")
+        capture_step("step6_enabled")
         results["steps"][-1]["data"] = {"enabled": widget.enableButton.checked}
 
         # Step 7: Open Segment Editor
@@ -182,30 +172,26 @@ def run_tutorial() -> dict:
         )
         slicer.util.selectModule("SegmentEditor")
         slicer.app.processEvents()
-        capture.capture_layout("12_segment_editor")
 
-        # Create a segmentation
         segmentation_node = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLSegmentationNode")
         segmentation_node.CreateDefaultDisplayNodes()
         segmentation_node.SetReferenceImageGeometryParameterFromVolumeNode(volume_node)
 
-        # Get segment editor widget
         segment_editor = slicer.modules.segmenteditor.widgetRepresentation().self()
         segment_editor.editor.setSegmentationNode(segmentation_node)
         segment_editor.editor.setSourceVolumeNode(volume_node)
         slicer.app.processEvents()
 
-        # Add a segment
         segmentation_node.GetSegmentation().AddEmptySegment("Brain")
         slicer.app.processEvents()
-        capture.capture_layout("13_segment_created")
+        capture_step("step7_segment_editor")
 
         # Step 8: Test Complete
         step(
             "Test Your Mappings",
             "Press your mapped buttons to verify they work. Back=Undo, Forward=Redo.",
         )
-        capture.capture_layout("14_tutorial_complete")
+        capture_step("step8_complete")
 
         # Disable MouseMaster for cleanup
         slicer.util.selectModule("MouseMaster")
@@ -251,19 +237,6 @@ def generate_tutorial_rst(results: dict, output_dir: Path) -> None:
     """Generate RST documentation from test results."""
     rst_file = output_dir.parent / "tutorial.rst"
 
-    # Map step indices to screenshot filenames based on manifest
-    manifest_file = output_dir / "manifest.json"
-    screenshot_map = {}
-    if manifest_file.exists():
-        with open(manifest_file) as f:
-            manifest = json.load(f)
-            for s in manifest.get("screenshots", []):
-                # Extract step number from description like "02_mrhead_loaded"
-                desc = s.get("description", "")
-                if desc and desc[0:2].isdigit():
-                    step_num = int(desc[0:2])
-                    screenshot_map[step_num] = s["filename"]
-
     lines = [
         "Tutorial: Segmentation Workflow",
         "================================",
@@ -279,9 +252,6 @@ def generate_tutorial_rst(results: dict, output_dir: Path) -> None:
         "",
     ]
 
-    # Screenshot number tracking based on captured files
-    screenshot_num = 1
-
     for i, step_data in enumerate(results["steps"], 1):
         step_name = step_data["name"]
         lines.append(f"Step {i}: {step_name}")
@@ -290,22 +260,13 @@ def generate_tutorial_rst(results: dict, output_dir: Path) -> None:
         lines.append(step_data["description"])
         lines.append("")
 
-        # Find matching screenshot(s) for this step
-        # Screenshots are numbered sequentially, multiple per step possible
-        step_screenshots = []
-        for num, filename in screenshot_map.items():
-            # Match screenshots that start with step number pattern
-            if num == screenshot_num or (num > screenshot_num and num <= screenshot_num + 2):
-                step_screenshots.append(filename)
-
-        if step_screenshots:
-            # Use the last screenshot for this step (most complete state)
-            screenshot = step_screenshots[-1]
-            lines.append(f".. figure:: _generated/{screenshot}")
+        # Use screenshot stored directly in step result
+        filename = step_data.get("screenshot")
+        if filename:
+            lines.append(f".. figure:: _generated/{filename}")
             lines.append("   :width: 100%")
             lines.append(f"   :alt: {step_name}")
             lines.append("")
-            screenshot_num = int(screenshot[:3]) + 1
 
         # Add contextual data if present
         if "data" in step_data:
