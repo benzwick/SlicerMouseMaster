@@ -78,10 +78,23 @@ def run_tutorial() -> dict:
 
     try:
         # ===========================================
-        # SETUP: Resize window for better screenshots
+        # SETUP: Resize window and panels for better screenshots
         # ===========================================
         main_window = slicer.util.mainWindow()
         main_window.resize(1920, 1080)
+        slicer.app.processEvents()
+
+        # Widen the module panel so content is readable
+        import qt
+
+        panel_dock_widget = main_window.findChildren(qt.QDockWidget, "PanelDockWidget")[0]
+        main_window.resizeDocks([panel_dock_widget], [450], qt.Qt.Horizontal)
+        slicer.app.processEvents()
+
+        # Hide Python console to give more vertical space
+        python_console = main_window.findChild(qt.QDockWidget, "PythonConsoleDockWidget")
+        if python_console:
+            python_console.setVisible(False)
         slicer.app.processEvents()
 
         # ===========================================
@@ -96,8 +109,8 @@ def run_tutorial() -> dict:
         volume_node = SampleData.SampleDataLogic().downloadMRHead()
         slicer.app.processEvents()
 
-        # Switch to conventional layout (not Sample Data module view)
-        slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutConventionalView)
+        # Use Four-Up layout to focus on the views (3D + 3 slices)
+        slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutFourUpView)
 
         # Reset slice views to show the volume properly
         slicer.util.resetSliceViews()
@@ -113,12 +126,16 @@ def run_tutorial() -> dict:
         threeDWidget.threeDView().resetCamera()
         slicer.app.processEvents()
 
-        # Select the Volumes module to show clean data view (not Sample Data browser)
-        slicer.util.selectModule("Volumes")
+        # Hide module panel for this step to focus on the loaded data
+        panel_dock_widget.setVisible(False)
         slicer.app.processEvents()
 
         capture_step("step1_data_loaded")
         results["steps"][-1]["data"] = {"volume": volume_node.GetName()}
+
+        # Restore module panel for next steps
+        panel_dock_widget.setVisible(True)
+        slicer.app.processEvents()
 
         # ===========================================
         # STEP 2: Open MouseMaster
@@ -127,6 +144,11 @@ def run_tutorial() -> dict:
             "Open MouseMaster",
             "Navigate to Modules > Utilities > MouseMaster.",
         )
+
+        # Switch to conventional layout for module-focused steps
+        slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutConventionalView)
+        slicer.app.processEvents()
+
         slicer.util.selectModule("MouseMaster")
         slicer.app.processEvents()
 
