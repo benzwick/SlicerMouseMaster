@@ -171,7 +171,7 @@ class ScreenshotCapture:
             pen = qt.QPen(qt.QColor(255, 0, 0))  # Red color
             pen.setWidth(3)
             painter.setPen(pen)
-            painter.setBrush(qt.Qt.NoBrush)
+            painter.setBrush(qt.QBrush())  # No fill
 
             for widget in highlights:
                 if widget and widget.isVisible():
