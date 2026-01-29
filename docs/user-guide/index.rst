@@ -32,28 +32,12 @@ Supported Mice
 
 MouseMaster works with any mouse, but provides optimized profiles for:
 
-.. list-table::
-   :header-rows: 1
+- **Logitech MX Master 3S** - 6 buttons, fully supported
+- **Logitech MX Master 4** - 6 buttons, fully supported
+- **Generic 3-Button** - Basic support for standard mice
+- **Generic 5-Button** - Support for mice with back/forward buttons
 
-   * - Mouse
-     - Vendor ID
-     - Buttons
-     - Status
-   * - Logitech MX Master 3S
-     - 0x46D
-     - 7
-     - Fully Supported
-   * - Logitech MX Master 4
-     - 0x46D
-     - 7
-     - Fully Supported
-   * - Generic 3-Button
-     - Any
-     - 3
-     - Basic Support
-   * - Generic 5-Button
-     - Any
-     - 5
-     - Basic Support
+See :doc:`/reference/mouse-profiles` for detailed button mappings and features
+for each supported mouse.
 
 Don't see your mouse? Use the button detection wizard to create a custom profile.

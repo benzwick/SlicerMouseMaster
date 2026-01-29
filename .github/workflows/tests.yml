@@ -222,12 +222,43 @@ jobs:
           path: docs/user-guide/_generated/
           retention-days: 30
 
-      - name: Build documentation with generated screenshots
+      - name: Generate reference documentation
+        run: |
+          mkdir -p docs/reference/_generated
+
+          # Mouse profiles reference (no Slicer needed, but run in same env)
+          echo "=== Generating mouse profiles reference ==="
+          python MouseMaster/Testing/Python/test_generate_mouse_profiles.py \
+            2>&1 | tee test-results/mouse-profiles-output.log
+
+          # Actions reference (needs Slicer for ActionRegistry)
+          echo "=== Generating actions reference ==="
+          timeout 120 $SLICER_HOME/Slicer --no-splash \
+            --python-script MouseMaster/Testing/Python/test_generate_actions_reference.py \
+            --additional-module-paths $(pwd)/MouseMaster \
+            2>&1 | tee test-results/actions-reference-output.log
+
+          echo "=== Reference documentation generated ==="
+          ls -la docs/reference/_generated/
+
+      - name: Upload reference documentation
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reference-docs
+          path: docs/reference/_generated/
+          retention-days: 30
+
+      - name: Build documentation with generated content
         run: |
           pip install -r docs/requirements.txt
-          sphinx-build -b html docs docs/_build/html
+
+          # Build docs - include all generated content
+          sphinx-build -b html docs docs/_build/html 2>&1 | tee test-results/sphinx-build.log
+
           echo "=== Documentation built ==="
           ls -la docs/_build/html/
+          ls -la docs/_build/html/reference/ || echo "No reference dir"
 
       - name: Upload documentation with screenshots
         uses: actions/upload-artifact@v4

@@ -103,13 +103,20 @@ def run_tutorial() -> dict:
         )
         widget = slicer.modules.mousemaster.widgetRepresentation().self()
 
+        # Show the mouse dropdown expanded (for documentation)
+        widget.mouseSelector.showPopup()
+        slicer.app.processEvents()
+        capture.capture_layout("05_mouse_dropdown_expanded")
+        widget.mouseSelector.hidePopup()
+        slicer.app.processEvents()
+
         # Select a mouse (Generic 3-Button for tutorial)
         for i in range(widget.mouseSelector.count):
             if "Generic 3-Button" in widget.mouseSelector.itemText(i):
                 widget.mouseSelector.setCurrentIndex(i)
                 break
         slicer.app.processEvents()
-        capture.capture_module_widget("05_mouse_selected")
+        capture.capture_layout("06_mouse_selected")
         results["steps"][-1]["data"] = {"mouse": widget.mouseSelector.currentText}
 
         # Step 4: Select Preset
@@ -117,11 +124,18 @@ def run_tutorial() -> dict:
             "Select Preset",
             "Choose a preset configuration for your workflow.",
         )
+        # Show the preset dropdown expanded (for documentation)
+        widget.presetSelector.showPopup()
+        slicer.app.processEvents()
+        capture.capture_layout("07_preset_dropdown_expanded")
+        widget.presetSelector.hidePopup()
+        slicer.app.processEvents()
+
         # Select first available preset
         if widget.presetSelector.count > 1:
             widget.presetSelector.setCurrentIndex(1)
         slicer.app.processEvents()
-        capture.capture_module_widget("06_preset_selected")
+        capture.capture_layout("08_preset_selected")
         results["steps"][-1]["data"] = {"preset": widget.presetSelector.currentText}
 
         # Step 5: Review Button Mappings
@@ -131,7 +145,12 @@ def run_tutorial() -> dict:
         )
         # Mappings should auto-expand when preset selected
         slicer.app.processEvents()
-        capture.capture_module_widget("07_button_mappings")
+
+        # Capture full layout showing mapping table with context
+        capture.capture_layout("09_button_mappings")
+
+        # Also capture just the module widget for detail view
+        capture.capture_module_widget("10_button_mappings_detail")
 
         # Capture mapping table info
         mappings = []
@@ -158,10 +177,16 @@ def run_tutorial() -> dict:
             "Enable MouseMaster",
             "Click Enable Mouse Master to activate button remapping.",
         )
+        # Capture before enabling
+        capture.capture_module_widget("11_before_enable")
+
         if widget.enableButton.enabled:
             widget.enableButton.setChecked(True)
             slicer.app.processEvents()
-        capture.capture_module_widget("08_enabled")
+
+        # Capture after enabling - full layout shows active status
+        capture.capture_layout("12_enabled")
+        capture.capture_module_widget("13_enabled_detail")
         results["steps"][-1]["data"] = {"enabled": widget.enableButton.checked}
 
         # Step 7: Open Segment Editor
@@ -171,7 +196,7 @@ def run_tutorial() -> dict:
         )
         slicer.util.selectModule("SegmentEditor")
         slicer.app.processEvents()
-        capture.capture_layout("09_segment_editor")
+        capture.capture_layout("14_segment_editor")
 
         # Create a segmentation
         segmentation_node = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLSegmentationNode")
@@ -187,14 +212,14 @@ def run_tutorial() -> dict:
         # Add a segment
         segmentation_node.GetSegmentation().AddEmptySegment("Brain")
         slicer.app.processEvents()
-        capture.capture_layout("10_segment_created")
+        capture.capture_layout("15_segment_created")
 
         # Step 8: Test Complete
         step(
             "Test Your Mappings",
             "Press your mapped buttons to verify they work. Back=Undo, Forward=Redo.",
         )
-        capture.capture_layout("11_tutorial_complete")
+        capture.capture_layout("16_tutorial_complete")
 
         # Disable MouseMaster for cleanup
         slicer.util.selectModule("MouseMaster")

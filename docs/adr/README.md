@@ -20,6 +20,8 @@ An ADR is a document that captures an important architectural decision made alon
 | [008](ADR-008-testing.md) | Testing Strategy | Accepted | 2025-01-25 |
 | [009](ADR-009-action-mapping.md) | Slicer Action Mapping | Accepted | 2025-01-25 |
 | [010](ADR-010-context-bindings.md) | Context-Sensitive Bindings | Accepted | 2025-01-25 |
+| [011](ADR-011-documentation-infrastructure.md) | Documentation Infrastructure | Accepted | 2025-01-25 |
+| [012](ADR-012-living-documentation.md) | Living Documentation | Accepted | 2026-01-29 |
 
 ## Status Values
 
@@ -72,7 +74,7 @@ What becomes easier or more difficult to do because of this change?
 ## Creating a New ADR
 
 1. Copy the template above
-2. Number sequentially (next is ADR-011)
+2. Number sequentially (next is ADR-013)
 3. Fill in all sections
 4. Add to the index table above
 5. Submit for review

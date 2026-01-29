@@ -47,6 +47,9 @@ ADR Index
    * - :doc:`ADR-011-documentation-infrastructure`
      - Documentation Infrastructure
      - Accepted
+   * - :doc:`ADR-012-living-documentation`
+     - Living Documentation
+     - Accepted
 
 What is an ADR?
 ---------------
@@ -85,3 +88,4 @@ Creating a New ADR
    ADR-009-action-mapping
    ADR-010-context-bindings
    ADR-011-documentation-infrastructure
+   ADR-012-living-documentation

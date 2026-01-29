@@ -16,7 +16,8 @@ This document tracks the development milestones for SlicerMouseMaster.
 | v0.8.0 | Action Library | Complete |
 | v0.9.0 | Preset Sharing | Complete |
 | v0.10.0 | Documentation | Complete |
-| v1.0.0 | Production Ready | In Progress |
+| v0.11.0 | Documentation Automation | In Progress |
+| v1.0.0 | Production Ready | Planned |
 
 ---
 
@@ -243,6 +244,26 @@ This document tracks the development milestones for SlicerMouseMaster.
 - [x] Updated CMakeLists.txt with correct URLs
 - [x] Fixed placeholder URLs throughout codebase
 - [x] ADR-011 documenting infrastructure decisions
+
+---
+
+## v0.11.0 - Documentation Automation
+
+**Goal**: Auto-generate reference documentation from code.
+
+### Living Documentation
+- [x] ADR-012: Living Documentation Architecture
+- [x] Auto-generate mouse-profiles.rst from JSON definitions
+- [x] Auto-generate actions.rst from ActionRegistry
+- [x] Improve tutorial screenshots (full layout views, dropdowns)
+
+### CI/CD Updates
+- [x] CI workflow generates reference docs before Sphinx build
+- [x] Reference docs uploaded as build artifact
+
+### Documentation Links
+- [x] Update reference index with mouse-profiles link
+- [x] Add _generated directories to .gitignore
 
 ---
 

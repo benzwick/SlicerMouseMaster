@@ -40,9 +40,12 @@ dist/
 # Documentation build
 docs/_build/
 
-# Generated documentation (from test_tutorial_workflow.py)
+# Generated documentation (from test generators)
 docs/user-guide/_generated/
+!docs/user-guide/_generated/.gitkeep
 docs/user-guide/tutorial.rst
+docs/reference/_generated/
+!docs/reference/_generated/.gitkeep
 
 # CI artifacts
 ci-artifacts/
