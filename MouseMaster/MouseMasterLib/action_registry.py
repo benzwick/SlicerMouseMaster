@@ -271,7 +271,9 @@ class ActionRegistry:
             # Find all QActions in the main window
             for action in main.findChildren(qt.QAction):
                 # Handle both property and method access (Qt version differences)
-                name = action.objectName if isinstance(action.objectName, str) else action.objectName()
+                name = (
+                    action.objectName if isinstance(action.objectName, str) else action.objectName()
+                )
                 text_raw = action.text if isinstance(action.text, str) else action.text()
                 text = text_raw.replace("&", "")  # Remove accelerator markers
 
@@ -279,7 +281,11 @@ class ActionRegistry:
                 if not name or not text:
                     continue
                 # Skip separators
-                is_sep = action.isSeparator if isinstance(action.isSeparator, bool) else action.isSeparator()
+                is_sep = (
+                    action.isSeparator
+                    if isinstance(action.isSeparator, bool)
+                    else action.isSeparator()
+                )
                 if is_sep:
                     continue
 

@@ -212,15 +212,17 @@ class Preset:
             The Mapping if found, None otherwise
         """
         # Try context-specific first
-        if context and context in self.context_mappings and button_id in self.context_mappings[context]:
+        if (
+            context
+            and context in self.context_mappings
+            and button_id in self.context_mappings[context]
+        ):
             return self.context_mappings[context][button_id]
 
         # Fall back to default
         return self.mappings.get(button_id)
 
-    def set_mapping(
-        self, button_id: str, mapping: Mapping, context: str | None = None
-    ) -> None:
+    def set_mapping(self, button_id: str, mapping: Mapping, context: str | None = None) -> None:
         """Set a mapping for a button.
 
         Args:
@@ -245,7 +247,11 @@ class Preset:
         Returns:
             True if mapping was removed, False if not found
         """
-        if context and context in self.context_mappings and button_id in self.context_mappings[context]:
+        if (
+            context
+            and context in self.context_mappings
+            and button_id in self.context_mappings[context]
+        ):
             del self.context_mappings[context][button_id]
             return True
         if not context and button_id in self.mappings:

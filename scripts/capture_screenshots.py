@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 def get_screenshot_dir() -> Path:
     """Get the Screenshots directory path."""
     # Try to find it relative to this script
-    script_dir = Path(__file__).parent if '__file__' in dir() else Path.cwd()
+    script_dir = Path(__file__).parent if "__file__" in dir() else Path.cwd()
 
     # Check common locations
     candidates = [
@@ -62,9 +62,7 @@ def capture_widget(widget, filepath: Path, size: tuple[int, int] | None = None) 
         # Resize if requested
         if size:
             pixmap = pixmap.scaled(
-                size[0], size[1],
-                qt.Qt.KeepAspectRatio,
-                qt.Qt.SmoothTransformation
+                size[0], size[1], qt.Qt.KeepAspectRatio, qt.Qt.SmoothTransformation
             )
 
         # Save
@@ -94,6 +92,7 @@ def capture_main_window(filepath: Path, size: tuple[int, int] | None = None) -> 
         True if successful
     """
     import slicer
+
     return capture_widget(slicer.util.mainWindow(), filepath, size)
 
 
@@ -200,7 +199,7 @@ def setup_clean_ui(layout: str = "3d_only") -> None:
         # Find all dock widgets and hide any that contain "DataProbe" or "Python"
         all_docks = main_window.findChildren(qt.QDockWidget)
         for dock in all_docks:
-            dock_title = dock.windowTitle if hasattr(dock, 'windowTitle') else ""
+            dock_title = dock.windowTitle if hasattr(dock, "windowTitle") else ""
             if callable(dock_title):
                 dock_title = dock_title()
             if dock_title and ("Data Probe" in dock_title or "Python" in dock_title):
@@ -227,8 +226,7 @@ def setup_clean_ui(layout: str = "3d_only") -> None:
 
 
 def configure_module_sections(
-    expand: list[str] | None = None,
-    collapse: list[str] | None = None
+    expand: list[str] | None = None, collapse: list[str] | None = None
 ) -> None:
     """Configure collapsible sections in MouseMaster module.
 
@@ -272,7 +270,7 @@ def configure_module_sections(
                     continue
                 processed_buttons.add(button_id)
 
-                button_text = button.text if hasattr(button, 'text') else ""
+                button_text = button.text if hasattr(button, "text") else ""
                 if callable(button_text):
                     button_text = button_text()
 
@@ -320,7 +318,7 @@ def capture_main_ui(output_dir: Path | str | None = None) -> Path | None:
     # Configure sections: expand useful ones, collapse developer/unneeded ones
     configure_module_sections(
         expand=["Button Mappings", "Mouse Selection", "Preset Management"],
-        collapse=["Reload", "Help", "Data Probe"]
+        collapse=["Reload", "Help", "Data Probe"],
     )
 
     # Wait for UI to settle
@@ -328,6 +326,7 @@ def capture_main_ui(output_dir: Path | str | None = None) -> Path | None:
 
     # Give a bit more time for UI to render
     import time
+
     time.sleep(0.5)
     qt.QApplication.processEvents()
 
@@ -365,10 +364,11 @@ def capture_button_mapping(output_dir: Path | str | None = None) -> Path | None:
     # Configure sections for a clean, user-focused view
     configure_module_sections(
         expand=["Button Mappings", "Mouse Selection", "Preset Management"],
-        collapse=["Reload", "Help", "Data Probe"]
+        collapse=["Reload", "Help", "Data Probe"],
     )
 
     import time
+
     time.sleep(0.3)
     qt.QApplication.processEvents()
 
@@ -404,10 +404,11 @@ def capture_preset_selector(output_dir: Path | str | None = None) -> Path | None
     # Focus on preset management - collapse Button Mappings to show preset section
     configure_module_sections(
         expand=["Mouse Selection", "Preset Management"],
-        collapse=["Reload", "Help", "Button Mappings", "Data Probe"]
+        collapse=["Reload", "Help", "Button Mappings", "Data Probe"],
     )
 
     import time
+
     time.sleep(0.3)
     qt.QApplication.processEvents()
 
@@ -469,10 +470,7 @@ def generate_manifest(output_dir: Path | str | None = None) -> Path:
     # Find all PNG files
     screenshots = list(output_dir.glob("*.png"))
 
-    manifest = {
-        "generated": datetime.now().isoformat(),
-        "screenshots": []
-    }
+    manifest = {"generated": datetime.now().isoformat(), "screenshots": []}
 
     descriptions = {
         "main-ui.png": "MouseMaster module in 3D Slicer showing button mapping configuration",
@@ -534,6 +532,7 @@ def main() -> int:
 
     # Wait for Slicer UI to be ready
     import qt
+
     qt.QApplication.processEvents()
 
     # Capture all screenshots
@@ -555,6 +554,7 @@ def main() -> int:
     if should_exit:
         print(f"Exiting Slicer with code {exit_code}")
         import slicer
+
         slicer.app.exit(exit_code)
 
     return exit_code
@@ -564,7 +564,8 @@ def main() -> int:
 if __name__ == "__main__" or "slicer" in dir():
     # Check if we're being run as a script (has sys.argv) or exec'd
     import sys
-    if hasattr(sys, 'argv') and len(sys.argv) > 0 and 'capture_screenshots' in sys.argv[0]:
+
+    if hasattr(sys, "argv") and len(sys.argv) > 0 and "capture_screenshots" in sys.argv[0]:
         # Running as: Slicer --python-script capture_screenshots.py [--exit]
         main()
     else:

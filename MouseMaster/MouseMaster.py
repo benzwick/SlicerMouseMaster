@@ -36,7 +36,9 @@ class MouseMaster(ScriptedLoadableModule):
         # TODO: set categories (folders where the module shows up in the module selector)
         self.parent.categories = [translate("qSlicerAbstractCoreModule", "Utilities")]
         self.parent.dependencies = []  # TODO: add here list of module names that this module requires
-        self.parent.contributors = ["SlicerMouseMaster Contributors"]  # TODO: replace with "Firstname Lastname (Organization)"
+        self.parent.contributors = [
+            "SlicerMouseMaster Contributors"
+        ]  # TODO: replace with "Firstname Lastname (Organization)"
         # TODO: update with short description of the module and a link to online module documentation
         # _() function marks text as translatable to other languages
         self.parent.helpText = _("""
@@ -51,11 +53,13 @@ Based on the Slicer extension template.
 """)
         # Schedule startup initialization after Slicer is fully loaded
         import qt
+
         qt.QTimer.singleShot(0, self._onStartupComplete)
 
     def _onStartupComplete(self) -> None:
         """Called after Slicer startup to initialize event handler if enabled."""
         import qt
+
         # Wait a bit more for layout to be ready
         qt.QTimer.singleShot(1000, self._initializeEventHandler)
 
@@ -74,7 +78,9 @@ Based on the Slicer extension template.
             logging.debug("[MouseMaster] Startup: not enabled or no mouse/preset selected")
             return
 
-        logging.info(f"[MouseMaster] Startup: auto-enabling with mouse={mouseId}, preset={presetId}")
+        logging.info(
+            f"[MouseMaster] Startup: auto-enabling with mouse={mouseId}, preset={presetId}"
+        )
 
         # Create shared event handler if needed
         if MouseMaster._sharedEventHandler is None:
@@ -97,10 +103,9 @@ Based on the Slicer extension template.
         if preset:
             MouseMaster._sharedEventHandler.set_preset(preset)
             MouseMaster._sharedEventHandler.install()
-            logging.info(f"[MouseMaster] Startup: event handler installed with preset '{preset.name}'")
-
-
-
+            logging.info(
+                f"[MouseMaster] Startup: event handler installed with preset '{preset.name}'"
+            )
 
 
 #
@@ -256,9 +261,13 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.mappingTable.setColumnCount(3)
         self.mappingTable.setHorizontalHeaderLabels(["Button", "Action", ""])
         self.mappingTable.horizontalHeader().setStretchLastSection(False)
-        self.mappingTable.horizontalHeader().setSectionResizeMode(0, qt.QHeaderView.ResizeToContents)
+        self.mappingTable.horizontalHeader().setSectionResizeMode(
+            0, qt.QHeaderView.ResizeToContents
+        )
         self.mappingTable.horizontalHeader().setSectionResizeMode(1, qt.QHeaderView.Stretch)
-        self.mappingTable.horizontalHeader().setSectionResizeMode(2, qt.QHeaderView.ResizeToContents)
+        self.mappingTable.horizontalHeader().setSectionResizeMode(
+            2, qt.QHeaderView.ResizeToContents
+        )
         self.mappingTable.setSelectionBehavior(qt.QAbstractItemView.SelectRows)
         self.mappingTable.setEditTriggers(qt.QAbstractItemView.NoEditTriggers)
         self.mappingTable.setMinimumHeight(250)
@@ -294,7 +303,9 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         """Called each time the user opens a different module."""
         # Do not react to parameter node changes (GUI will be updated when the user enters into the module)
         if self._parameterNode:
-            self.removeObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanApply)
+            self.removeObserver(
+                self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanApply
+            )
 
     def onSceneStartClose(self, caller, event) -> None:
         """Called just before the scene is closed."""
@@ -339,7 +350,9 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         """
 
         if self._parameterNode:
-            self.removeObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanApply)
+            self.removeObserver(
+                self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanApply
+            )
         self._parameterNode = inputParameterNode
         if self._parameterNode:
             # Note: We use programmatic UI, not .ui file with automatic parameter binding
@@ -348,9 +361,11 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     def _checkCanApply(self, caller=None, event=None) -> None:
         """Check if MouseMaster can be enabled (mouse and preset selected)."""
-        canEnable = bool(self._parameterNode and
-                        self._parameterNode.selectedMouseId and
-                        self._parameterNode.selectedPresetId)
+        canEnable = bool(
+            self._parameterNode
+            and self._parameterNode.selectedMouseId
+            and self._parameterNode.selectedPresetId
+        )
         self.enableButton.enabled = canEnable
         if not canEnable:
             self.enableButton.toolTip = _("Select a mouse and preset first")
@@ -466,7 +481,9 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 logging.info(f"Loaded built-in mouse profile: {profile.name}")
 
         # Load user profiles (can override built-in)
-        user_dir = Path(slicer.app.slicerUserSettingsFilePath).parent / "MouseMaster" / "MouseDefinitions"
+        user_dir = (
+            Path(slicer.app.slicerUserSettingsFilePath).parent / "MouseMaster" / "MouseDefinitions"
+        )
         if user_dir.exists():
             for json_file in user_dir.glob("*.json"):
                 profile = MouseProfile.from_json_file(json_file)
@@ -531,13 +548,18 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
             # Connect signal with button id and combo reference
             actionCombo.setProperty("buttonId", button.id)
-            actionCombo.connect("currentIndexChanged(int)", lambda idx, b=button.id, c=actionCombo: self._onActionChanged(b, idx, c))
+            actionCombo.connect(
+                "currentIndexChanged(int)",
+                lambda idx, b=button.id, c=actionCombo: self._onActionChanged(b, idx, c),
+            )
             self.mappingTable.setCellWidget(row, 1, actionCombo)
 
             # Clear button
             clearBtn = qt.QPushButton("Clear")
             clearBtn.setMaximumWidth(60)
-            clearBtn.connect("clicked()", lambda checked=False, b=button.id: self._onClearMapping(b))
+            clearBtn.connect(
+                "clicked()", lambda checked=False, b=button.id: self._onClearMapping(b)
+            )
             self.mappingTable.setCellWidget(row, 2, clearBtn)
 
     def _populateActionCombo(self, combo) -> None:
@@ -632,7 +654,9 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         """Save a detected mouse profile and create a default preset."""
         from MouseMasterLib.preset_manager import Preset
 
-        user_dir = Path(slicer.app.slicerUserSettingsFilePath).parent / "MouseMaster" / "MouseDefinitions"
+        user_dir = (
+            Path(slicer.app.slicerUserSettingsFilePath).parent / "MouseMaster" / "MouseDefinitions"
+        )
         user_dir.mkdir(parents=True, exist_ok=True)
         profile_path = user_dir / f"{profile.id}.json"
         profile.to_json_file(profile_path)
@@ -646,14 +670,12 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             if button.id == "back":
                 # Default: previous module (like Slicer default Ctrl+Left)
                 default_mappings[button.id] = Mapping(
-                    action="keyboard_shortcut",
-                    parameters={"key": "Left", "modifiers": ["ctrl"]}
+                    action="keyboard_shortcut", parameters={"key": "Left", "modifiers": ["ctrl"]}
                 )
             elif button.id == "forward":
                 # Default: next module (like Slicer default Ctrl+Right)
                 default_mappings[button.id] = Mapping(
-                    action="keyboard_shortcut",
-                    parameters={"key": "Right", "modifiers": ["ctrl"]}
+                    action="keyboard_shortcut", parameters={"key": "Right", "modifiers": ["ctrl"]}
                 )
             elif button.id == "middle":
                 default_mappings[button.id] = Mapping(action="view_reset_3d")
@@ -675,7 +697,9 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             # VolumeRendering: toggle visibility and reset view (viewing actions)
             context_mappings["VolumeRendering"] = {}
             if has_back:
-                context_mappings["VolumeRendering"]["back"] = Mapping(action="volumerendering_toggle")
+                context_mappings["VolumeRendering"]["back"] = Mapping(
+                    action="volumerendering_toggle"
+                )
             if has_forward:
                 context_mappings["VolumeRendering"]["forward"] = Mapping(action="view_reset_3d")
 
@@ -719,7 +743,9 @@ class MouseMasterWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self._parameterNode.selectedPresetId = presetId
         if enabled:
             self._parameterNode.enabled = enabled
-        logging.info(f"[MouseMaster] Loaded settings: mouse={mouseId!r}, preset={presetId!r}, enabled={enabled}")
+        logging.info(
+            f"[MouseMaster] Loaded settings: mouse={mouseId!r}, preset={presetId!r}, enabled={enabled}"
+        )
 
 
 #

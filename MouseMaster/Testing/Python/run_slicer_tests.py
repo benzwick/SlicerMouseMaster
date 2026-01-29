@@ -28,12 +28,13 @@ def get_screenshots_dir() -> Path:
     """Get the screenshots output directory."""
     # Check for CI environment
     import os
-    workspace = os.environ.get('GITHUB_WORKSPACE')
+
+    workspace = os.environ.get("GITHUB_WORKSPACE")
     if workspace:
-        return Path(workspace) / 'test-results' / 'screenshots'
+        return Path(workspace) / "test-results" / "screenshots"
 
     # Local: use Testing/Python/screenshots
-    return Path(__file__).parent / 'screenshots'
+    return Path(__file__).parent / "screenshots"
 
 
 def run_tests():
@@ -48,7 +49,7 @@ def run_tests():
     from screenshot_capture import ScreenshotCapture
 
     capture = ScreenshotCapture(base_folder=screenshots_dir)
-    results = {'passed': 0, 'failed': 0, 'errors': []}
+    results = {"passed": 0, "failed": 0, "errors": []}
 
     print(f"Screenshots will be saved to: {screenshots_dir}")
     print("=" * 60)
@@ -59,7 +60,7 @@ def run_tests():
 
         # Load MouseMaster module
         print("Loading MouseMaster module...")
-        slicer.util.selectModule('MouseMaster')
+        slicer.util.selectModule("MouseMaster")
         slicer.app.processEvents()
 
         capture.set_group("integration_tests")
@@ -76,39 +77,39 @@ def run_tests():
         # Run test: Mouse selector
         print("\nTest: Mouse selector...")
         try:
-            if hasattr(widget, 'mouseSelector') and widget.mouseSelector.count > 1:
+            if hasattr(widget, "mouseSelector") and widget.mouseSelector.count > 1:
                 widget.mouseSelector.setCurrentIndex(1)
                 slicer.app.processEvents()
                 capture.capture_module_widget("After selecting mouse")
                 print("  PASSED: Mouse selector works")
-                results['passed'] += 1
+                results["passed"] += 1
             else:
                 print("  SKIPPED: No mice available")
         except Exception as e:
             print(f"  FAILED: {e}")
-            results['failed'] += 1
-            results['errors'].append(f"Mouse selector: {e}")
+            results["failed"] += 1
+            results["errors"].append(f"Mouse selector: {e}")
 
         # Run test: Preset selector
         print("\nTest: Preset selector...")
         try:
-            if hasattr(widget, 'presetSelector') and widget.presetSelector.count > 1:
+            if hasattr(widget, "presetSelector") and widget.presetSelector.count > 1:
                 widget.presetSelector.setCurrentIndex(1)
                 slicer.app.processEvents()
                 capture.capture_module_widget("After selecting preset")
                 print("  PASSED: Preset selector works")
-                results['passed'] += 1
+                results["passed"] += 1
             else:
                 print("  SKIPPED: No presets available")
         except Exception as e:
             print(f"  FAILED: {e}")
-            results['failed'] += 1
-            results['errors'].append(f"Preset selector: {e}")
+            results["failed"] += 1
+            results["errors"].append(f"Preset selector: {e}")
 
         # Run test: Context toggle
         print("\nTest: Context toggle...")
         try:
-            if hasattr(widget, 'contextToggle'):
+            if hasattr(widget, "contextToggle"):
                 initial_state = widget.contextToggle.checked
                 widget.contextToggle.setChecked(True)
                 slicer.app.processEvents()
@@ -117,45 +118,45 @@ def run_tests():
                 widget.contextToggle.setChecked(initial_state)
                 slicer.app.processEvents()
                 print("  PASSED: Context toggle works")
-                results['passed'] += 1
+                results["passed"] += 1
             else:
                 print("  SKIPPED: No context toggle")
         except Exception as e:
             print(f"  FAILED: {e}")
-            results['failed'] += 1
-            results['errors'].append(f"Context toggle: {e}")
+            results["failed"] += 1
+            results["errors"].append(f"Context toggle: {e}")
 
         # Run test: Enable button
         print("\nTest: Enable button...")
         try:
-            if hasattr(widget, 'enableButton'):
+            if hasattr(widget, "enableButton"):
                 capture.capture_widget(widget.enableButton, "Enable button state")
                 print("  PASSED: Enable button accessible")
-                results['passed'] += 1
+                results["passed"] += 1
             else:
                 print("  SKIPPED: No enable button")
         except Exception as e:
             print(f"  FAILED: {e}")
-            results['failed'] += 1
-            results['errors'].append(f"Enable button: {e}")
+            results["failed"] += 1
+            results["errors"].append(f"Enable button: {e}")
 
         # Run test: Mapping table
         print("\nTest: Mapping table...")
         try:
-            if hasattr(widget, 'mappingTable'):
+            if hasattr(widget, "mappingTable"):
                 capture.capture_widget(widget.mappingTable, "Mapping table")
                 # Handle both property and method access for rowCount
                 row_count = widget.mappingTable.rowCount
                 if callable(row_count):
                     row_count = row_count()
                 print(f"  PASSED: Mapping table has {row_count} rows")
-                results['passed'] += 1
+                results["passed"] += 1
             else:
                 print("  SKIPPED: No mapping table")
         except Exception as e:
             print(f"  FAILED: {e}")
-            results['failed'] += 1
-            results['errors'].append(f"Mapping table: {e}")
+            results["failed"] += 1
+            results["errors"].append(f"Mapping table: {e}")
 
         # Capture final state
         capture.capture_layout("Final layout after all tests")
@@ -168,21 +169,23 @@ def run_tests():
         print("Running MouseMaster built-in tests...")
         try:
             import MouseMaster
+
             test = MouseMaster.MouseMasterTest()
             test.runTest()  # Raises exception on failure, returns None on success
             print("Built-in tests: PASSED")
-            results['passed'] += 1
+            results["passed"] += 1
         except Exception as e:
             print(f"Built-in tests: FAILED - {e}")
-            results['failed'] += 1
-            results['errors'].append(f"Built-in tests: {e}")
+            results["failed"] += 1
+            results["errors"].append(f"Built-in tests: {e}")
 
     except Exception as e:
         print(f"\nERROR: {e}")
         import traceback
+
         traceback.print_exc()
-        results['failed'] += 1
-        results['errors'].append(str(e))
+        results["failed"] += 1
+        results["errors"].append(str(e))
 
         # Capture error state screenshot
         try:
@@ -197,27 +200,35 @@ def run_tests():
     print("=" * 60)
     print(f"Passed: {results['passed']}")
     print(f"Failed: {results['failed']}")
-    if results['errors']:
+    if results["errors"]:
         print("\nErrors:")
-        for err in results['errors']:
+        for err in results["errors"]:
             print(f"  - {err}")
 
     # Write results file
-    results_file = screenshots_dir.parent / 'test-results.json' if screenshots_dir.parent.name == 'screenshots' else screenshots_dir / 'test-results.json'
-    results_file = screenshots_dir.parent / 'test-results.json'
-    with open(results_file, 'w') as f:
-        json.dump({
-            'timestamp': datetime.now().isoformat(),
-            'passed': results['passed'],
-            'failed': results['failed'],
-            'errors': results['errors'],
-            'screenshots_dir': str(screenshots_dir),
-        }, f, indent=2)
+    results_file = (
+        screenshots_dir.parent / "test-results.json"
+        if screenshots_dir.parent.name == "screenshots"
+        else screenshots_dir / "test-results.json"
+    )
+    results_file = screenshots_dir.parent / "test-results.json"
+    with open(results_file, "w") as f:
+        json.dump(
+            {
+                "timestamp": datetime.now().isoformat(),
+                "passed": results["passed"],
+                "failed": results["failed"],
+                "errors": results["errors"],
+                "screenshots_dir": str(screenshots_dir),
+            },
+            f,
+            indent=2,
+        )
     print(f"\nResults saved to: {results_file}")
 
-    return results['failed'] == 0
+    return results["failed"] == 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = run_tests()
     sys.exit(0 if success else 1)

@@ -163,9 +163,7 @@ class MouseMasterEventHandler:
 
         return slicer.util.selectedModule() or "default"
 
-    def _execute_mapping(
-        self, mapping: object, normalized: object, context: str
-    ) -> None:
+    def _execute_mapping(self, mapping: object, normalized: object, context: str) -> None:
         """Execute a button mapping."""
         # Get action registry (lazy load)
         if self._action_registry is None:

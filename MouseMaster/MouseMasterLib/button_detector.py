@@ -140,12 +140,18 @@ class ButtonDetector:
         # Check if already detected
         if qt_button in self._session.buttons:
             self._session.buttons[qt_button].press_count += 1
-            logger.debug(f"Button {qt_button} pressed again (count: {self._session.buttons[qt_button].press_count})")
+            logger.debug(
+                f"Button {qt_button} pressed again (count: {self._session.buttons[qt_button].press_count})"
+            )
             return True
 
         # New button detected
         step = len(self._session.buttons)
-        suggested = self.SUGGESTED_BUTTONS[step] if step < len(self.SUGGESTED_BUTTONS) else (f"button{step}", f"Button {step}")
+        suggested = (
+            self.SUGGESTED_BUTTONS[step]
+            if step < len(self.SUGGESTED_BUTTONS)
+            else (f"button{step}", f"Button {step}")
+        )
 
         detected = DetectedButton(
             qt_button=qt_button,
