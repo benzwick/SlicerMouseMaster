@@ -1,5 +1,10 @@
 # SlicerMouseMaster
 
+[![Tests](https://github.com/benzwick/SlicerMouseMaster/actions/workflows/tests.yml/badge.svg)](https://github.com/benzwick/SlicerMouseMaster/actions/workflows/tests.yml)
+[![Documentation](https://img.shields.io/badge/docs-GitHub_Pages-blue.svg)](https://benzwick.github.io/SlicerMouseMaster)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE.txt)
+[![Slicer](https://img.shields.io/badge/3D_Slicer-5.10-green.svg)](https://download.slicer.org/)
+
 A 3D Slicer extension for advanced mouse customization, button remapping, and workflow optimization.
 
 ![SlicerMouseMaster Main Interface](SlicerMouseMaster/Screenshots/main-ui.png)
@@ -156,8 +161,7 @@ Button codes may differ between operating systems. If a preset created on Window
 
 ## Requirements
 
-- 3D Slicer 5.4 or later
-- Python 3.9+
+- 3D Slicer 5.10 or later
 - No additional dependencies (uses Qt/VTK from Slicer)
 
 ## Contributing
