@@ -9,22 +9,35 @@ SlicerMouseMaster is a 3D Slicer extension providing advanced mouse customizatio
 - Preset sharing via JSON export/import
 - Auto-detection of button codes
 
+## Pre-commit Hooks (REQUIRED)
+
+**Before making any commits, ensure pre-commit hooks are installed:**
+
+```bash
+# Check if hooks are installed
+ls -la .git/hooks/pre-commit
+
+# Install hooks (MUST do this before committing)
+uv run pre-commit install
+
+# Run hooks manually on all files
+uv run pre-commit run --all-files
+```
+
+**IMPORTANT:** Never commit without hooks active. If `.git/hooks/pre-commit` doesn't exist or is a sample file, run `uv run pre-commit install` first.
+
 ## Quick Commands
 
 ```bash
 # Run unit tests (outside Slicer)
 uv run pytest MouseMaster/Testing/Python/ -v
 
-# Lint and format
+# Lint and format (hooks run these automatically)
 uv run ruff check .
 uv run ruff format .
 
 # Type checking
 uv run mypy MouseMaster/MouseMasterLib/
-
-# Pre-commit hooks
-uv run pre-commit install
-uv run pre-commit run --all-files
 ```
 
 ## Testing in Slicer
