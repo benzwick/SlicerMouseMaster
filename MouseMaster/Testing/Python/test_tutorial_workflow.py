@@ -298,53 +298,22 @@ def run_tutorial() -> dict:
         capture_step("step7_segment_editor")
 
         # ===========================================
-        # STEP 8: Paint and Test Undo
+        # STEP 8: Test Your Mappings
         # ===========================================
         step(
             "Test Your Mappings",
             "Paint on the slice, then press Back button to Undo. Press Forward to Redo.",
         )
 
-        # Actually paint something so we can demonstrate undo
-        # Get the Paint effect and configure it
+        # Configure the paint brush to show it's ready
         effect = segment_editor_widget.editor.activeEffect()
         if effect:
             effect.setParameter("BrushSphere", "0")
             effect.setParameter("BrushDiameterMm", "15")
             slicer.app.processEvents()
 
-        # Paint programmatically by using the effect's paint method
-        # We'll paint at the center of the red slice view
-        red_slice_widget = slicer.app.layoutManager().sliceWidget("Red")
-        red_slice_node = red_slice_widget.mrmlSliceNode()
-
-        # Get the center of the slice in RAS coordinates
-        sliceToRAS = red_slice_node.GetSliceToRAS()
-        center_ras = [
-            sliceToRAS.GetElement(0, 3),
-            sliceToRAS.GetElement(1, 3),
-            sliceToRAS.GetElement(2, 3),
-        ]
-
-        # Use the segment editor effect to paint
-        if effect:
-            # Paint at a few positions to create visible stroke
-
-            for offset in [0, 5, 10, 15, 20]:
-                point_ras = [center_ras[0] + offset, center_ras[1], center_ras[2]]
-                effect.self().paintApply(point_ras)
-
-            slicer.app.processEvents()
-
-        # Show 3D representation of segmentation
-        segmentation_node.CreateClosedSurfaceRepresentation()
-        slicer.app.processEvents()
-
-        # Reset 3D view to show both volume and segmentation
-        threeDWidget.threeDView().resetFocalPoint()
-        slicer.app.processEvents()
-
-        capture_step("step8_paint_test")
+        # Just show the ready state - user will paint manually
+        capture_step("step8_ready_to_paint")
 
         # ===========================================
         # CLEANUP
