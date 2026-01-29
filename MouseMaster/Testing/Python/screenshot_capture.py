@@ -136,13 +136,17 @@ class ScreenshotCapture:
         return output_dir
 
     def capture_layout(
-        self, description: str, metadata: dict[str, Any] | None = None
+        self,
+        description: str,
+        metadata: dict[str, Any] | None = None,
+        highlights: list[Any] | None = None,
     ) -> ScreenshotInfo | None:
-        """Capture the full Slicer layout.
+        """Capture the full Slicer layout with optional highlights.
 
         Args:
             description: Description of what this screenshot shows
             metadata: Optional additional metadata
+            highlights: Optional list of widgets to highlight with red rectangles
 
         Returns:
             ScreenshotInfo if captured, None if Slicer not available
@@ -150,6 +154,7 @@ class ScreenshotCapture:
         if not self._slicer_available:
             return None
 
+        import qt
         import slicer
 
         output_dir = self._ensure_output_dir()
@@ -157,10 +162,34 @@ class ScreenshotCapture:
         filepath = output_dir / filename
 
         # Capture the layout
-        layout_manager = slicer.app.layoutManager()
-        if layout_manager:
-            # Use Slicer's screenshot utility
-            slicer.util.mainWindow().grab().save(str(filepath))
+        main_window = slicer.util.mainWindow()
+        pixmap = main_window.grab()
+
+        # Draw highlights if specified
+        if highlights:
+            painter = qt.QPainter(pixmap)
+            pen = qt.QPen(qt.QColor(255, 0, 0))  # Red color
+            pen.setWidth(3)
+            painter.setPen(pen)
+            painter.setBrush(qt.Qt.NoBrush)
+
+            for widget in highlights:
+                if widget and widget.isVisible():
+                    # Get widget position relative to main window
+                    widget_rect = widget.rect()
+                    global_pos = widget.mapToGlobal(widget_rect.topLeft())
+                    local_pos = main_window.mapFromGlobal(global_pos)
+                    rect = qt.QRect(
+                        local_pos.x(),
+                        local_pos.y(),
+                        widget_rect.width(),
+                        widget_rect.height(),
+                    )
+                    painter.drawRect(rect)
+
+            painter.end()
+
+        pixmap.save(str(filepath))
 
         info = ScreenshotInfo(
             filename=filename,

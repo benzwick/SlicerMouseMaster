@@ -68,9 +68,14 @@ def run_tutorial() -> dict:
         print(f"\n=== Step: {name} ===")
         print(description)
 
-    def capture_step(description: str) -> str | None:
-        """Capture screenshot for current step and store filename."""
-        info = capture.capture_layout(description)
+    def capture_step(description: str, highlights: list | None = None) -> str | None:
+        """Capture screenshot for current step and store filename.
+
+        Args:
+            description: Description for the screenshot filename
+            highlights: Optional list of widgets to highlight with red rectangles
+        """
+        info = capture.capture_layout(description, highlights=highlights)
         if info:
             results["steps"][-1]["screenshot"] = info.filename
             return info.filename
@@ -115,10 +120,14 @@ def run_tutorial() -> dict:
         # Reset slice views to show the volume properly
         slicer.util.resetSliceViews()
 
-        # Enable volume rendering so 3D view shows something useful
+        # Enable volume rendering with MR-Default preset for good brain visualization
         volRenLogic = slicer.modules.volumerendering.logic()
         displayNode = volRenLogic.CreateDefaultVolumeRenderingNodes(volume_node)
         displayNode.SetVisibility(True)
+        # Apply MR-Default preset for better MRI visualization
+        preset = volRenLogic.GetPresetByName("MR-Default")
+        if preset:
+            displayNode.GetVolumePropertyNode().Copy(preset)
 
         # Reset 3D view camera to frame the volume
         threeDWidget = slicer.app.layoutManager().threeDWidget(0)
@@ -190,7 +199,8 @@ def run_tutorial() -> dict:
         widget.mappingsCollapsible.collapsed = False
         slicer.app.processEvents()
 
-        capture_step("step3_mouse_selected")
+        # Highlight the mouse selector dropdown
+        capture_step("step3_mouse_selected", highlights=[widget.mouseSelector])
         results["steps"][-1]["data"] = {"mouse": widget.mouseSelector.currentText}
 
         # ===========================================
@@ -206,7 +216,8 @@ def run_tutorial() -> dict:
             widget.presetSelector.setCurrentIndex(1)
         slicer.app.processEvents()
 
-        capture_step("step4_preset_selected")
+        # Highlight the preset selector dropdown
+        capture_step("step4_preset_selected", highlights=[widget.presetSelector])
         results["steps"][-1]["data"] = {"preset": widget.presetSelector.currentText}
 
         # ===========================================
@@ -240,7 +251,8 @@ def run_tutorial() -> dict:
         # (already expanded from step 3)
         slicer.app.processEvents()
 
-        capture_step("step5_button_mappings")
+        # Highlight the mapping table
+        capture_step("step5_button_mappings", highlights=[widget.mappingTable])
 
         # ===========================================
         # STEP 6: Enable MouseMaster
@@ -254,7 +266,8 @@ def run_tutorial() -> dict:
             widget.enableButton.setChecked(True)
             slicer.app.processEvents()
 
-        capture_step("step6_enabled")
+        # Highlight the enable button
+        capture_step("step6_enabled", highlights=[widget.enableButton])
         results["steps"][-1]["data"] = {"enabled": widget.enableButton.checked}
 
         # ===========================================
