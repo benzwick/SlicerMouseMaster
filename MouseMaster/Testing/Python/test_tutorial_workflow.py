@@ -77,18 +77,35 @@ def run_tutorial() -> dict:
         return None
 
     try:
+        # Resize window to ensure module panel fits properly
+        main_window = slicer.util.mainWindow()
+        main_window.resize(1600, 1000)
+        slicer.app.processEvents()
+
         # Step 1: Load Sample Data
         step(
             "Load Sample Data",
             "Load MRHead from Sample Data module for segmentation practice.",
         )
-        slicer.util.selectModule("SampleData")
-        slicer.app.processEvents()
-
         import SampleData
 
         volume_node = SampleData.SampleDataLogic().downloadMRHead()
         slicer.app.processEvents()
+
+        # Switch to conventional layout and set up proper views
+        slicer.app.layoutManager().setLayout(slicer.vtkMRMLLayoutNode.SlicerLayoutConventionalView)
+        slicer.util.resetSliceViews()
+
+        # Enable volume rendering in 3D view for better visualization
+        volRenLogic = slicer.modules.volumerendering.logic()
+        displayNode = volRenLogic.CreateDefaultVolumeRenderingNodes(volume_node)
+        displayNode.SetVisibility(True)
+
+        # Reset 3D view to show the volume
+        threeDWidget = slicer.app.layoutManager().threeDWidget(0)
+        threeDWidget.threeDView().resetFocalPoint()
+        slicer.app.processEvents()
+
         capture_step("step1_data_loaded")
         results["steps"][-1]["data"] = {"volume": volume_node.GetName()}
 
@@ -99,20 +116,27 @@ def run_tutorial() -> dict:
         )
         slicer.util.selectModule("MouseMaster")
         slicer.app.processEvents()
+
+        # Get widget and expand Button Mappings right away so changes are visible
+        widget = slicer.modules.mousemaster.widgetRepresentation().self()
+        widget.mappingsCollapsible.collapsed = False
+        slicer.app.processEvents()
+
         capture_step("step2_mousemaster")
 
         # Step 3: Select Mouse
         step(
             "Select Mouse",
-            "Choose your mouse model from the dropdown. Select Generic 3-Button if not listed.",
+            "Choose your mouse model from the dropdown. We'll use the Logitech MX Master 3S.",
         )
-        widget = slicer.modules.mousemaster.widgetRepresentation().self()
 
+        # Select MX Master 3S - this will change the visible mappings
         for i in range(widget.mouseSelector.count):
-            if "Generic 3-Button" in widget.mouseSelector.itemText(i):
+            if "MX Master 3S" in widget.mouseSelector.itemText(i):
                 widget.mouseSelector.setCurrentIndex(i)
                 break
         slicer.app.processEvents()
+
         capture_step("step3_mouse_selected")
         results["steps"][-1]["data"] = {"mouse": widget.mouseSelector.currentText}
 
@@ -124,19 +148,17 @@ def run_tutorial() -> dict:
         if widget.presetSelector.count > 1:
             widget.presetSelector.setCurrentIndex(1)
         slicer.app.processEvents()
+
         capture_step("step4_preset_selected")
         results["steps"][-1]["data"] = {"preset": widget.presetSelector.currentText}
 
         # Step 5: Review Button Mappings
         step(
             "Review Button Mappings",
-            "Expand Button Mappings to see current configuration.",
+            "Review the button mappings for your mouse. MX Master 3S has 4 remappable buttons.",
         )
-        # Expand the Button Mappings section
-        widget.mappingsCollapsible.collapsed = False
-        slicer.app.processEvents()
-        capture_step("step5_button_mappings")
 
+        # Collect mapping data
         mappings = []
         table = widget.mappingTable
         row_count = table.rowCount
@@ -156,6 +178,9 @@ def run_tutorial() -> dict:
                 )
         results["steps"][-1]["data"] = {"mappings": mappings}
 
+        # Scroll to show all mappings clearly
+        capture_step("step5_button_mappings")
+
         # Step 6: Enable MouseMaster
         step(
             "Enable MouseMaster",
@@ -164,6 +189,7 @@ def run_tutorial() -> dict:
         if widget.enableButton.enabled:
             widget.enableButton.setChecked(True)
             slicer.app.processEvents()
+
         capture_step("step6_enabled")
         results["steps"][-1]["data"] = {"enabled": widget.enableButton.checked}
 
@@ -184,16 +210,34 @@ def run_tutorial() -> dict:
         segment_editor.editor.setSourceVolumeNode(volume_node)
         slicer.app.processEvents()
 
+        # Add a segment
         segmentation_node.GetSegmentation().AddEmptySegment("Brain")
         slicer.app.processEvents()
+
         capture_step("step7_segment_editor")
 
-        # Step 8: Test Complete
+        # Step 8: Test Your Mappings - show actual painting
         step(
             "Test Your Mappings",
-            "Press your mapped buttons to verify they work. Back=Undo, Forward=Redo.",
+            "Use Paint tool to draw, then test Back button for Undo.",
         )
-        capture_step("step8_complete")
+
+        # Select Paint effect and do some painting to show workflow
+        segment_editor.editor.setActiveEffectByName("Paint")
+        effect = segment_editor.editor.activeEffect()
+        if effect:
+            # Set a reasonable brush size
+            effect.setParameter("BrushSphere", 0)
+            effect.setParameter("BrushDiameterMm", 10)
+
+        # Select the segment so Paint tool is ready to use
+        segment_id = segmentation_node.GetSegmentation().GetSegmentIdBySegmentName("Brain")
+        if segment_id:
+            # Get the segment's labelmap
+            segment_editor.editor.setCurrentSegmentID(segment_id)
+            slicer.app.processEvents()
+
+        capture_step("step8_paint_test")
 
         # Disable MouseMaster for cleanup
         slicer.util.selectModule("MouseMaster")
@@ -250,7 +294,7 @@ def generate_tutorial_rst(results: dict, output_dir: Path) -> None:
         "-------------",
         "",
         "- 3D Slicer installed with MouseMaster extension",
-        "- A multi-button mouse (or use Generic 3-Button profile)",
+        "- A multi-button mouse (this tutorial uses the Logitech MX Master 3S)",
         "",
     ]
 
