@@ -379,6 +379,6 @@ class TestWidgetNoSender:
             )
             if match:
                 method_body = match.group(1)
-                assert "self.sender()" not in method_body, (
-                    "_onActionChanged should not use self.sender()"
-                )
+                assert (
+                    "self.sender()" not in method_body
+                ), "_onActionChanged should not use self.sender()"

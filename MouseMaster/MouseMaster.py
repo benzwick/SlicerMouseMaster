@@ -41,16 +41,20 @@ class MouseMaster(ScriptedLoadableModule):
         ]  # TODO: replace with "Firstname Lastname (Organization)"
         # TODO: update with short description of the module and a link to online module documentation
         # _() function marks text as translatable to other languages
-        self.parent.helpText = _("""
+        self.parent.helpText = _(
+            """
 Mouse customization extension for 3D Slicer. Provides button remapping,
 workflow presets, and context-sensitive bindings for multi-button mice.
 See more information in <a href="https://github.com/benzwick/SlicerMouseMaster#readme">module documentation</a>.
-""")
+"""
+        )
         # TODO: replace with organization, grant and thanks
-        self.parent.acknowledgementText = _("""
+        self.parent.acknowledgementText = _(
+            """
 This extension was developed by the SlicerMouseMaster contributors.
 Based on the Slicer extension template.
-""")
+"""
+        )
         # Schedule startup initialization after Slicer is fully loaded
         import qt
 
