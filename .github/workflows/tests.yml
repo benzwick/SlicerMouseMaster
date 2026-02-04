@@ -172,9 +172,10 @@ jobs:
           mkdir -p test-results/screenshots
 
           # Run the test script from the repository
+          # Note: --additional-module-paths must come BEFORE --python-script
           timeout 300 $SLICER_HOME/Slicer --no-splash \
-            --python-script MouseMaster/Testing/Python/run_slicer_tests.py \
             --additional-module-paths $(pwd)/MouseMaster \
+            --python-script MouseMaster/Testing/Python/run_slicer_tests.py \
             2>&1 | tee test-results/slicer-output.log
 
           # Copy screenshots to test-results
@@ -207,8 +208,8 @@ jobs:
           mkdir -p docs/user-guide/_generated
 
           timeout 300 $SLICER_HOME/Slicer --no-splash \
-            --python-script MouseMaster/Testing/Python/test_tutorial_workflow.py \
             --additional-module-paths $(pwd)/MouseMaster \
+            --python-script MouseMaster/Testing/Python/test_tutorial_workflow.py \
             2>&1 | tee test-results/tutorial-output.log
 
           echo "=== Tutorial artifacts ==="
@@ -234,8 +235,8 @@ jobs:
           # Actions reference (needs Slicer for ActionRegistry)
           echo "=== Generating actions reference ==="
           timeout 120 $SLICER_HOME/Slicer --no-splash \
-            --python-script MouseMaster/Testing/Python/test_generate_actions_reference.py \
             --additional-module-paths $(pwd)/MouseMaster \
+            --python-script MouseMaster/Testing/Python/test_generate_actions_reference.py \
             2>&1 | tee test-results/actions-reference-output.log
 
           echo "=== Reference documentation generated ==="
